@@ -355,6 +355,24 @@ export default function DemoMode() {
                   cameras={INITIAL_CAMERAS}
                   selectedVehicleId="V-1027"
                   height="h-full"
+                  isReconstructing={currentStep >= 6 && currentStep <= 7}
+                  reconstructionStage={
+                    currentStep < 6 ? 0 : currentStep === 6 ? 3 : 5
+                  }
+                  evidence={
+                    currentStep === 6 
+                      ? {
+                          transition: 'CAM-01 → CAM-02',
+                          plate: 96,
+                          type: 99,
+                          color: 94,
+                          visual: 91,
+                          temporal: 95,
+                          spatial: 93,
+                          finalMatch: 94
+                        }
+                      : null
+                  }
                 />
               </div>
 

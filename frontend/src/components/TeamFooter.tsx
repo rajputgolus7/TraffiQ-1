@@ -5,7 +5,7 @@ export default function TeamFooter() {
     'Rajveer Singh',
     'Harshit Sharma',
     'Ankit Kumar',
-    'Himashi',
+    'Himanshi',
     'Vaibhav Sharma'
   ];
 
@@ -40,24 +40,25 @@ export default function TeamFooter() {
           </div>
         </div>
 
-        {/* CENTER COLUMN: Team TraffiQ-1 & Members */}
+        {/* CENTER COLUMN: Team TraffiQ-1 & Members (Balanced, Professional Hierarchy) */}
         <div className="border-t md:border-t-0 md:border-l border-panel-border/80 md:pl-6 space-y-3">
           <div className="flex items-center space-x-1.5 text-white font-bold text-xs uppercase tracking-wider">
             <Users size={14} className="text-accent" />
             <span>Team TraffiQ-1</span>
           </div>
 
-          <div className="space-y-1 bg-[#0b101c] p-2.5 rounded border border-gray-800/80">
-            <div className="text-[10px] text-gray-500 uppercase font-semibold flex items-center space-x-1">
-              <User size={11} className="text-accent" />
-              <span>Team Leader</span>
+          {/* Factual, un-exaggerated Team Leader */}
+          <div className="space-y-0.5">
+            <div className="text-[10px] text-gray-500 uppercase font-semibold">
+              Team Leader
             </div>
-            <div className="text-sm font-bold text-white tracking-wide">
+            <div className="text-xs font-bold text-white tracking-wide">
               Golu Kumar Singh
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          {/* Team Members List */}
+          <div className="space-y-1 pt-1 border-t border-gray-800/80">
             <div className="text-[10px] text-gray-500 uppercase font-semibold">
               Team Members
             </div>
