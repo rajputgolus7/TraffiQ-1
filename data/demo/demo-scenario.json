@@ -1,0 +1,64 @@
+{
+  "scenario_name": "Vehicle Tracking Demo",
+  "events": [
+    {
+      "delay_seconds": 2,
+      "type": "detection",
+      "data": {
+        "camera_id": "CAM-01",
+        "vehicle_id": "V-1027",
+        "plate": "PB10XX1234",
+        "action": "enters"
+      }
+    },
+    {
+      "delay_seconds": 3,
+      "type": "detection",
+      "data": {
+        "camera_id": "CAM-01",
+        "vehicle_id": "V-1027",
+        "plate": "PB10XX1234",
+        "action": "leaves"
+      }
+    },
+    {
+      "delay_seconds": 5,
+      "type": "detection",
+      "data": {
+        "camera_id": "CAM-02",
+        "vehicle_id": "V-1027",
+        "plate": "PB10XX1234",
+        "action": "enters",
+        "note": "Re-ID matched"
+      }
+    },
+    {
+      "delay_seconds": 6,
+      "type": "detection",
+      "data": {
+        "camera_id": "CAM-04",
+        "vehicle_id": "V-1027",
+        "plate": "PB10XX1234",
+        "action": "enters",
+        "note": "Re-ID matched"
+      }
+    },
+    {
+      "delay_seconds": 1,
+      "type": "alert",
+      "data": {
+        "vehicle_id": "V-1027",
+        "message": "Vehicle flagged for suspicious routing across CAM-01, CAM-02, CAM-04",
+        "severity": "high"
+      }
+    },
+    {
+      "delay_seconds": 1,
+      "type": "analytics_update",
+      "data": {
+        "total_vehicles": 105,
+        "active_alerts": 1
+      }
+    }
+  ]
+}
