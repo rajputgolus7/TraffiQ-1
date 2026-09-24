@@ -10,6 +10,7 @@ import CityMapPage from './pages/CityMapPage';
 import AlertsCenter from './pages/AlertsCenter';
 import AnalyticsPage from './pages/AnalyticsPage';
 import DemoMode from './pages/DemoMode';
+import TeamFooter from './components/TeamFooter';
 
 function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -46,27 +47,32 @@ function AppLayout() {
         )}
 
         {/* Dynamic Route Content */}
-        <main className="flex-1 overflow-y-auto p-4 relative">
-          {/* Subtle floating toggle to restore UI if in presentation mode */}
-          {isPresentationMode && (
-            <button
-              onClick={() => setIsPresentationMode(false)}
-              className="absolute top-4 right-4 z-40 bg-accent text-black font-mono font-bold text-xs px-3 py-1.5 rounded shadow-lg border border-orange-400 opacity-80 hover:opacity-100 transition-opacity"
-            >
-              EXIT FULL SCREEN
-            </button>
-          )}
+        <main className="flex-1 overflow-y-auto p-4 relative flex flex-col justify-between">
+          <div>
+            {/* Subtle floating toggle to restore UI if in presentation mode */}
+            {isPresentationMode && (
+              <button
+                onClick={() => setIsPresentationMode(false)}
+                className="absolute top-4 right-4 z-40 bg-accent text-black font-mono font-bold text-xs px-3 py-1.5 rounded shadow-lg border border-orange-400 opacity-80 hover:opacity-100 transition-opacity"
+              >
+                EXIT FULL SCREEN
+              </button>
+            )}
 
-          <Routes>
-            <Route path="/" element={<CommandCenter />} />
-            <Route path="/cameras" element={<LiveMonitoring />} />
-            <Route path="/vehicles" element={<VehiclesPage />} />
-            <Route path="/journey" element={<VehicleJourney />} />
-            <Route path="/map" element={<CityMapPage />} />
-            <Route path="/alerts" element={<AlertsCenter />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/demo" element={<DemoMode />} />
-          </Routes>
+            <Routes>
+              <Route path="/" element={<CommandCenter />} />
+              <Route path="/cameras" element={<LiveMonitoring />} />
+              <Route path="/vehicles" element={<VehiclesPage />} />
+              <Route path="/journey" element={<VehicleJourney />} />
+              <Route path="/map" element={<CityMapPage />} />
+              <Route path="/alerts" element={<AlertsCenter />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/demo" element={<DemoMode />} />
+            </Routes>
+          </div>
+
+          {/* Official SIH Team Footer */}
+          {!isPresentationMode && <TeamFooter />}
         </main>
       </div>
     </div>
