@@ -1,62 +1,219 @@
-import React, { useState } from 'react';
-import { Search, MapPin, Clock, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { 
+  INITIAL_VEHICLES, 
+  INITIAL_CAMERAS 
+} from '../data/mockData';
+import MapAnalytics from '../components/MapAnalytics';
+import { 
+  Search, 
+  Car, 
+  Clock, 
+  MapPin, 
+  Gauge, 
+  ShieldCheck, 
+  ArrowRight, 
+  GitFork, 
+  AlertTriangle,
+  CheckCircle2,
+  Calendar,
+  Layers
+} from 'lucide-react';
 
 export default function VehicleJourney() {
-  const [search, setSearch] = useState('PB10XX1234');
+  const [searchQuery, setSearchQuery] = useState('PB10XX1234');
+  const [selectedVehicle, setSelectedVehicle] = useState(INITIAL_VEHICLES[0]);
 
-  const journey = [
-    { time: '10:45 AM', location: 'NH-44 North Entry', cam: 'CAM-01', image: 'front-view' },
-    { time: '11:12 AM', location: 'City Center Intersection', cam: 'CAM-02', image: 'side-view' },
-    { time: '11:40 AM', location: 'West Toll Plaza', cam: 'CAM-03', image: 'rear-view' },
-  ];
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim().toUpperCase();
+    const match = INITIAL_VEHICLES.find(
+      v => v.plate.toUpperCase().includes(query) || v.id.toUpperCase().includes(query)
+    );
+    if (match) {
+      setSelectedVehicle(match);
+    }
+  };
+
+  const selectVehicleQuick = (vehicleId: string) => {
+    const v = INITIAL_VEHICLES.find(item => item.id === vehicleId);
+    if (v) {
+      setSelectedVehicle(v);
+      setSearchQuery(v.plate);
+    }
+  };
 
   return (
-    <div className="h-full flex flex-col max-w-5xl mx-auto w-full space-y-6 pt-4">
-      <div className="bg-panel border border-gray-800 rounded-lg p-6">
-        <h2 className="text-lg font-bold mb-4 flex items-center">
-          <Search className="mr-2 text-accent" /> Vehicle Search & Journey Tracking
-        </h2>
-        <div className="flex space-x-4">
-          <input 
-            type="text" 
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Enter Vehicle Plate (e.g., PB10XX1234)"
-            className="flex-1 bg-black border border-gray-700 rounded px-4 py-2 text-white focus:outline-none focus:border-accent"
-          />
-          <button className="bg-accent text-black font-bold px-6 py-2 rounded hover:bg-orange-600 transition-colors">
-            Track
-          </button>
+    <div className="space-y-4">
+      {/* Top Search & Filter Bar */}
+      <div className="ops-panel rounded-lg p-4 border border-panel-border shadow-md">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-black font-mono tracking-tight text-white uppercase flex items-center space-x-2">
+              <GitFork size={20} className="text-accent" />
+              <span>Vehicle Journey Reconstruction</span>
+            </h2>
+            <p className="text-xs font-mono text-gray-400 mt-0.5">
+              Multi-camera spatial-temporal correlation and automated trajectory synthesis
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {/* Search Input Form */}
+            <form onSubmit={handleSearch} className="flex items-center space-x-2">
+              <div className="relative flex-1">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter Plate (e.g., PB10XX1234) or ID"
+                  className="bg-[#0b101c] border border-gray-700 focus:border-accent text-white font-mono text-xs pl-9 pr-3 py-2 rounded w-64 focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-accent hover:bg-orange-600 text-black font-mono font-bold text-xs px-4 py-2 rounded transition-colors"
+              >
+                TRACK
+              </button>
+            </form>
+
+            {/* Quick Select Preset Buttons */}
+            <div className="flex items-center space-x-1 font-mono text-[11px]">
+              <span className="text-gray-500 text-[10px] mr-1">QUICK:</span>
+              {INITIAL_VEHICLES.slice(0, 3).map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => selectVehicleQuick(v.id)}
+                  className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${
+                    selectedVehicle.id === v.id
+                      ? 'bg-accent/20 text-accent border-accent/60 font-bold'
+                      : 'bg-[#0f1728] text-gray-400 border-gray-800 hover:text-white'
+                  }`}
+                >
+                  {v.id} ({v.plate})
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
-        <div className="md:col-span-1 bg-panel border border-gray-800 rounded-lg p-6 overflow-y-auto">
-           <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-6">Timeline</h3>
-           <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-700 before:to-transparent">
-             {journey.map((stop, i) => (
-               <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                 <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-panel bg-accent text-black shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                   <Clock size={16} />
-                 </div>
-                 <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-black p-4 rounded border border-gray-800 shadow">
-                   <div className="flex items-center justify-between mb-1">
-                     <div className="font-bold text-accent text-sm">{stop.time}</div>
-                     <div className="text-xs text-gray-500 font-mono">{stop.cam}</div>
-                   </div>
-                   <div className="text-sm text-gray-300">{stop.location}</div>
-                 </div>
-               </div>
-             ))}
-           </div>
+      {/* Hero Journey Overview Banner */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono">
+        <div className="ops-panel p-3.5 rounded-lg border border-panel-border">
+          <div className="text-[10px] text-gray-400 uppercase flex items-center space-x-1.5">
+            <GitFork size={13} className="text-telemetry" />
+            <span>TOTAL DISTANCE</span>
+          </div>
+          <div className="text-2xl font-black text-white mt-1">
+            {selectedVehicle.distanceKm} <span className="text-xs font-normal text-gray-400">KM</span>
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1">Calculated via road graph</div>
         </div>
-        <div className="md:col-span-2 bg-panel border border-gray-800 rounded-lg flex items-center justify-center relative overflow-hidden">
-           {/* Mock Map View for Journey */}
-           <div className="absolute inset-0 bg-[url('https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json')] opacity-20 bg-cover bg-center mix-blend-overlay"></div>
-           <div className="z-10 text-center">
-             <MapPin size={48} className="text-accent mx-auto mb-4 opacity-50" />
-             <p className="text-gray-400">Map visualization integrating MapLibre GL path rendering</p>
-           </div>
+
+        <div className="ops-panel p-3.5 rounded-lg border border-panel-border">
+          <div className="text-[10px] text-gray-400 uppercase flex items-center space-x-1.5">
+            <Clock size={13} className="text-accent" />
+            <span>TRAVEL DURATION</span>
+          </div>
+          <div className="text-2xl font-black text-accent mt-1">
+            04:37 <span className="text-xs font-normal text-gray-400">MIN</span>
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1">Transit time between nodes</div>
+        </div>
+
+        <div className="ops-panel p-3.5 rounded-lg border border-panel-border">
+          <div className="text-[10px] text-gray-400 uppercase flex items-center space-x-1.5">
+            <Gauge size={13} className="text-warning" />
+            <span>AVG SPEED</span>
+          </div>
+          <div className="text-2xl font-black text-white mt-1">
+            {selectedVehicle.avgSpeedKmh} <span className="text-xs font-normal text-gray-400">KM/H</span>
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1">Within legal velocity envelope</div>
+        </div>
+
+        <div className="ops-panel p-3.5 rounded-lg border border-panel-border">
+          <div className="text-[10px] text-gray-400 uppercase flex items-center space-x-1.5">
+            <ShieldCheck size={13} className="text-online" />
+            <span>MATCH CONFIDENCE</span>
+          </div>
+          <div className="text-2xl font-black text-online mt-1">
+            {selectedVehicle.reidConfidence}%
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1">OSNet Visual + ANPR Plate</div>
+        </div>
+      </div>
+
+      {/* Main Grid: Timeline on Left, GIS Trajectory Map on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Left Column: Multi-Camera Timeline (5 Columns on LG) */}
+        <div className="lg:col-span-5 ops-panel rounded-lg p-4 border border-panel-border flex flex-col shadow-md">
+          <div className="flex items-center justify-between border-b border-panel-border/80 pb-3 mb-4">
+            <div>
+              <h3 className="font-mono text-xs font-bold text-gray-200 tracking-wider uppercase">
+                Chronological Node Timeline
+              </h3>
+              <p className="text-[11px] font-mono text-gray-500 mt-0.5">
+                Target: <span className="text-white font-bold">{selectedVehicle.id}</span> • {selectedVehicle.type} ({selectedVehicle.color})
+              </p>
+            </div>
+            <span className="font-mono text-xs bg-black/60 px-2 py-1 rounded text-white border border-gray-700 font-bold">
+              {selectedVehicle.plate}
+            </span>
+          </div>
+
+          {/* Timeline Nodes */}
+          <div className="space-y-4 relative before:absolute before:inset-0 before:left-4 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-accent before:via-orange-500 before:to-emerald-500 pr-1 overflow-y-auto max-h-[500px]">
+            {selectedVehicle.journey.length > 0 ? (
+              selectedVehicle.journey.map((stop, idx) => (
+                <div key={stop.cameraId} className="relative flex items-start space-x-4 pl-1">
+                  {/* Step Marker */}
+                  <div className="w-7 h-7 rounded-full bg-[#0d1424] border-2 border-accent text-accent font-mono font-bold text-xs flex items-center justify-center shrink-0 z-10 shadow-md">
+                    {idx + 1}
+                  </div>
+
+                  {/* Card for this Stop */}
+                  <div className="flex-1 bg-[#0c1220] border border-gray-800 hover:border-accent/60 p-3.5 rounded-lg transition-all text-xs font-mono">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-accent text-sm">{stop.cameraId}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-gray-200 font-semibold">{stop.cameraName}</span>
+                      </div>
+                      <span className="text-online font-bold">
+                        {(stop.confidence * 100).toFixed(0)}% Match
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-400 pt-1 border-t border-gray-800/80">
+                      <div>TIMESTAMP: <span className="text-white font-bold">{stop.timestamp}</span></div>
+                      <div>LOCAL SPEED: <span className="text-white font-bold">{stop.speedKmh} km/h</span></div>
+                      {stop.transitTimeSec && (
+                        <div className="col-span-2 text-telemetry">
+                          TRANSIT TIME: <span className="font-bold">{stop.transitTimeSec} seconds</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12 text-gray-500 font-mono text-xs">
+                No intermediate journey nodes recorded for this target.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Interactive Map Route (7 Columns on LG) */}
+        <div className="lg:col-span-7 h-[580px]">
+          <MapAnalytics 
+            cameras={INITIAL_CAMERAS}
+            selectedVehicleId={selectedVehicle.id}
+            height="h-[580px]"
+          />
         </div>
       </div>
     </div>
