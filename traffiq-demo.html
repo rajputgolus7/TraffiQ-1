@@ -3,1601 +3,1075 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TraffiQ City Traffic Command Center</title>
+<title>TraffiQ — City Traffic Intelligence Platform</title>
 <style>
-  :root {
-    --bg: #080c14;
-    --panel-bg: #0a0f1a;
-    --panel-lighter: #111827;
-    --accent: #f97316;
-    --accent-glow: rgba(249, 115, 22, 0.3);
-    --green: #10b981;
-    --red: #ef4444;
-    --cyan: #06b6d4;
-    --purple: #8b5cf6;
-    --amber: #f59e0b;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border: #1e293b;
-    --border-light: #334155;
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-  }
-  
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  
-  body {
-    background-color: var(--bg);
-    color: var(--text-main);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* UTILITIES */
-  .flex { display: flex; }
-  .flex-col { display: flex; flex-direction: column; }
-  .items-center { align-items: center; }
-  .justify-between { justify-content: space-between; }
-  .justify-center { justify-content: center; }
-  .gap-2 { gap: 0.5rem; }
-  .gap-4 { gap: 1rem; }
-  .p-4 { padding: 1rem; }
-  .p-2 { padding: 0.5rem; }
-  .text-xs { font-size: 0.75rem; }
-  .text-sm { font-size: 0.875rem; }
-  .text-lg { font-size: 1.125rem; }
-  .text-xl { font-size: 1.25rem; }
-  .font-bold { font-weight: bold; }
-  .text-accent { color: var(--accent); }
-  .text-muted { color: var(--text-muted); }
-  .text-green { color: var(--green); }
-  .text-red { color: var(--red); }
-  .bg-panel { background-color: var(--panel-bg); }
-  .border { border: 1px solid var(--border); }
-  .border-b { border-bottom: 1px solid var(--border); }
-  .border-r { border-right: 1px solid var(--border); }
-  .rounded { border-radius: 4px; }
-  .cursor-pointer { cursor: pointer; }
-  .hidden { display: none !important; }
-  .grid { display: grid; }
-  
-  /* HEADER */
-  header {
-    height: 60px;
-    background-color: var(--panel-bg);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 1rem;
-    z-index: 10;
-  }
-  .brand { display: flex; align-items: center; gap: 1rem; }
-  .badge { background: #1e293b; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; border: 1px solid var(--border-light); }
-  .badge.status { border-color: var(--green); color: var(--green); }
-  .chips { display: flex; gap: 0.5rem; }
-  .chip { background: #0f172a; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; }
-  .btn { background: #1e293b; color: white; border: 1px solid var(--border); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: var(--font-mono); font-size: 0.8rem; transition: all 0.2s; }
-  .btn:hover { background: #334155; }
-  .btn-accent { background: rgba(249,115,22,0.1); border-color: var(--accent); color: var(--accent); }
-  .btn-accent:hover { background: rgba(249,115,22,0.2); }
-  
-  /* MAIN LAYOUT */
-  .main-wrapper { display: flex; flex: 1; overflow: hidden; }
-  
-  /* SIDEBAR */
-  aside {
-    width: 210px;
-    background-color: var(--panel-bg);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .nav-item {
-    padding: 12px 16px;
-    cursor: pointer;
-    border-left: 3px solid transparent;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--text-muted);
-  }
-  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
-  .nav-item.active { border-left-color: var(--accent); background: rgba(249,115,22,0.05); color: var(--accent); }
-  .nav-icon { width: 16px; height: 16px; fill: currentColor; }
-  
-  /* CONTENT AREA */
-  main { flex: 1; overflow-y: auto; padding: 1rem; position: relative; }
-  .page { display: none; height: 100%; flex-direction: column; gap: 1rem; }
-  .page.active { display: flex; }
-  
-  /* FOOTER */
-  footer {
-    height: 70px;
-    background-color: var(--panel-bg);
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 1.5rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-  }
-  
-  /* CARDS & PANELS */
-  .panel { background-color: var(--panel-lighter); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; display: flex; flex-direction: column; }
-  .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
-  
-  /* KPI STRIP */
-  .kpi-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
-  .kpi-card { background: var(--panel-lighter); border: 1px solid var(--border); padding: 0.75rem; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-  .kpi-val { font-size: 1.5rem; font-weight: bold; color: var(--accent); margin: 4px 0; }
-  .kpi-lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
-  
-  /* CANVAS & CAMERAS */
-  .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; height: 100%; }
-  .cam-container { position: relative; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; background: #000; cursor: pointer; }
-  .cam-container:hover { border-color: var(--accent); }
-  .cam-container canvas { width: 100%; height: 100%; display: block; }
-  .cam-overlay { position: absolute; top: 0; left: 0; right: 0; padding: 6px; display: flex; justify-content: space-between; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); pointer-events: none; }
-  .cam-label { background: rgba(0,0,0,0.6); padding: 2px 6px; font-size: 0.7rem; border: 1px solid var(--border); color: #fff; }
-  .scanline { position: absolute; width: 100%; height: 2px; background: rgba(255,255,255,0.1); top: 0; left: 0; pointer-events: none; animation: scan 3s linear infinite; }
-  @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
-  
-  /* AI TELEMETRY */
-  .ai-bar-wrap { margin-bottom: 12px; }
-  .ai-bar-lbl { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; }
-  .ai-bar-bg { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .ai-bar-fill { height: 100%; }
-  
-  /* LIVE EVENTS */
-  .event-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-  .event-item { padding: 8px; font-size: 0.75rem; background: #0f172a; border-left: 2px solid var(--border); border-radius: 2px; display: flex; gap: 8px; transition: background 0.2s; }
-  .event-item:hover { background: #1e293b; }
-  .evt-time { color: var(--text-muted); }
-  
-  /* TABLES */
-  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-  th { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: normal; }
-  td { padding: 8px; border-bottom: 1px solid var(--border-light); }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-  .tr-active td { background: rgba(249,115,22,0.1); }
-  
-  /* SVG MAP */
-  .map-container { position: relative; width: 100%; height: 100%; background: #040810; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
-  .map-container svg { width: 100%; height: 100%; display: block; }
-  .node-pulse { animation: pulse 2s infinite; transform-origin: center; }
-  @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 70% { transform: scale(2.5); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
-  .route-path { stroke-dasharray: 10; stroke-dashoffset: 1000; animation: dash 5s linear forwards; }
-  @keyframes dash { to { stroke-dashoffset: 0; } }
-  
-  /* MODALS */
-  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 100; display: none; justify-content: center; align-items: center; }
-  .modal-overlay.active { display: flex; }
-  .modal-content { background: var(--panel-bg); border: 1px solid var(--accent); border-radius: 8px; width: 90%; max-width: 1200px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(249,115,22,0.15); }
-  .modal-header { padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .modal-body { flex: 1; display: flex; overflow: hidden; }
-  
-  /* DEMO STORY */
-  .demo-stepper { display: flex; gap: 4px; padding: 10px; background: #000; }
-  .demo-step { flex: 1; height: 4px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
-  .demo-step.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-  .demo-step.passed { background: var(--accent); opacity: 0.5; }
-  .demo-scene-text { position: absolute; bottom: 10%; left: 10%; right: 10%; background: rgba(10,15,26,0.9); border: 1px solid var(--accent); padding: 2rem; border-radius: 8px; text-align: center; }
-  
-  /* ALERTS */
-  .alert-card { padding: 12px; margin-bottom: 8px; border-left: 4px solid var(--border); background: var(--panel-lighter); border-radius: 4px; }
-  .alert-card.critical { border-left-color: var(--red); background: rgba(239,68,68,0.05); }
-  .alert-card.high { border-left-color: var(--accent); background: rgba(249,115,22,0.05); }
-  .alert-card.medium { border-left-color: var(--amber); }
-  .alert-card.info { border-left-color: var(--cyan); }
-  
-  /* CUSTOM SCROLLBAR */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-  
-  .layout-2col { display: grid; grid-template-columns: 7fr 5fr; gap: 1rem; flex: 1; min-height: 0; }
-  .layout-row { display: flex; gap: 1rem; flex: 1; min-height: 0; }
-
-  /* Tech grid bg */
-  body { background-image: linear-gradient(to right, rgba(30,44,69,.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(30,44,69,.18) 1px, transparent 1px); background-size: 32px 32px; }
-
-  /* Pulse glow animation */
-  @keyframes pulseGlow { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.15)} }
-
-  /* Sidebar improvements */
-  .nav-item { font-weight: 700; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
-  .nav-item.active { box-shadow: inset 0 0 12px rgba(249,115,22,.08); }
-  .sys-matrix { padding: 12px; border-top: 1px solid var(--border); background: #070b13; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 6px; }
-  .sys-row { display: flex; justify-content: space-between; color: #cbd5e1; }
-
-  /* KPI upgrade */
-  .kpi-strip { display: grid; grid-template-columns: repeat(6, 1fr); }
-  .kpi-card { background: linear-gradient(180deg,rgba(17,26,46,.6),rgba(12,18,32,.8)); border: 1px solid var(--border); padding: 12px 14px; border-right: none; }
-  .kpi-card:last-child { border-right: 1px solid var(--border); }
-  .kpi-val { font-size: 22px; font-weight: 900; color: #fff; margin: 4px 0 0; }
-  .kpi-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: .06em; display: flex; justify-content: space-between; align-items: center; }
-  .kpi-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; border: 1px solid; }
-  .kpi-sub { font-size: 10px; color: #64748b; margin-top: 4px; }
-
-  /* Better event items */
-  .event-item { border-left-width: 3px; }
-  .evt-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; text-transform: uppercase; }
-
-  /* Footer full width 3-col */
-  footer { height: auto; padding: 16px 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c14;--panel:#0a0f1a;--panel2:#0d1526;--border:#1e293b;--border2:#253045;
+  --accent:#f97316;--green:#10b981;--red:#ef4444;--cyan:#06b6d4;--purple:#8b5cf6;--amber:#f59e0b;
+  --txt:#f1f5f9;--muted:#64748b;--muted2:#94a3b8;
+  --mono:'JetBrains Mono','Fira Code','Courier New',monospace;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;display:flex;flex-direction:column;
+  background-image:linear-gradient(rgba(30,44,69,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(30,44,69,.12) 1px,transparent 1px);
+  background-size:32px 32px}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes ping{0%{transform:scale(1);opacity:.8}70%{transform:scale(2.2);opacity:0}100%{opacity:0}}
+@keyframes scan{0%{top:-5%}100%{top:105%}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#topbar{height:56px;background:rgba(10,15,26,.97);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:12px;flex-shrink:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;border-radius:6px;background:linear-gradient(135deg,#f97316,#dc4f00);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(249,115,22,.3);flex-shrink:0}
+.brand-name{font-size:17px;font-weight:900;letter-spacing:.08em;color:#fff}
+.brand-tag{font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(124,45,18,.5);color:#fb923c;border:1px solid rgba(154,52,18,.7);font-weight:700}
+.status-pill{background:rgba(6,78,59,.4);border:1px solid rgba(5,150,105,.5);border-radius:20px;padding:4px 12px;display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);position:relative;flex-shrink:0}
+.status-dot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--green);animation:ping 2s infinite}
+.chips{display:flex;gap:6px}
+.chip{background:rgba(15,23,42,.9);border:1px solid var(--border2);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--muted2)}
+.chip b{color:#fff}
+.hclock{text-align:right;line-height:1.3}
+.hclock .time{font-size:14px;font-weight:800;color:#fff;letter-spacing:.06em}
+.hclock .date{font-size:9px;color:var(--muted);font-weight:600}
+.btn{background:var(--panel2);border:1px solid var(--border2);color:var(--muted2);cursor:pointer;
+  padding:6px 12px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{background:var(--border);color:#fff}
+.btn-accent{background:var(--accent);color:#000;border-color:transparent;box-shadow:0 3px 10px rgba(249,115,22,.25)}
+.btn-accent:hover{background:#ea6c0a;color:#000}
+.btn-red{border-color:rgba(239,68,68,.4);color:#f87171}.btn-red:hover{background:rgba(239,68,68,.12);color:#fff}
+#shell{display:flex;flex:1;overflow:hidden}
+#sidebar{width:200px;background:rgba(7,11,19,.95);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.page{display:none;flex-direction:column;gap:12px;padding:14px;flex:1;animation:fadeIn .2s ease}
+.page.active{display:flex}
+.nav-section{padding:10px 12px 4px;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;color:var(--muted2);
+  font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.nav-item.active{border-left-color:var(--accent);background:rgba(249,115,22,.07);color:var(--accent)}
+.nav-item svg{flex-shrink:0;opacity:.7}.nav-item.active svg{opacity:1}
+.sys-matrix{margin-top:auto;border-top:1px solid var(--border);background:rgba(4,7,12,.8);padding:10px 14px;font-size:10px;display:flex;flex-direction:column;gap:5px}
+.sys-row{display:flex;justify-content:space-between;color:var(--muted2)}
+.sys-row span.on{color:var(--green);font-weight:700}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap}
+.ph-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#e2e8f0;display:flex;align-items:center;gap:7px}
+.pb{padding:12px 14px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.kpi{padding:10px 14px;border-right:1px solid var(--border)}
+.kpi:last-child{border-right:none}
+.kpi-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.kpi-val{font-size:20px;font-weight:900;color:#fff;margin:3px 0}.kpi-sub{font-size:9px;color:var(--muted)}
+.kpi-badge{font-size:8px;padding:1px 5px;border-radius:3px;border:1px solid;font-weight:700}
+.cam-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cam-wrap{background:#000;border:1px solid var(--border2);border-radius:5px;overflow:hidden;cursor:pointer;
+  display:flex;flex-direction:column;transition:border-color .15s}
+.cam-wrap:hover{border-color:var(--accent)}
+.cam-wrap.alert-cam{border-color:rgba(239,68,68,.5)}.cam-wrap.alert-cam:hover{border-color:var(--red)}
+.cam-top{background:var(--panel);padding:6px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.cam-id{font-size:11px;font-weight:800;color:var(--accent)}
+.cam-name{font-size:11px;font-weight:600;color:var(--muted2)}
+.cam-fps{font-size:9px;color:var(--muted);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px;border:1px solid var(--border)}
+.cam-body{flex:1;position:relative;min-height:120px}
+.cam-body canvas{width:100%;height:100%;display:block}
+.cam-scanline{position:absolute;width:100%;height:2px;background:rgba(255,255,255,.06);top:0;left:0;pointer-events:none;animation:scan 3s linear infinite}
+.cam-ts{position:absolute;top:5px;left:7px;font-size:9px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.6);padding:2px 5px;border-radius:3px;pointer-events:none}
+.cam-ai{position:absolute;bottom:5px;left:7px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;pointer-events:none}
+.cam-ai.ok{color:var(--green);background:rgba(0,0,0,.7);border:1px solid rgba(16,185,129,.3)}
+.cam-ai.warn{color:var(--red);background:rgba(0,0,0,.7);border:1px solid rgba(239,68,68,.4)}
+.cam-count{position:absolute;bottom:5px;right:7px;font-size:9px;color:#fff;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid var(--border);pointer-events:none}
+.cam-bottom{background:var(--panel);padding:4px 10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:9px;color:var(--muted);flex-shrink:0}
+.ai-row{margin-bottom:10px}
+.ai-row-top{display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;color:var(--muted2)}
+.ai-row-top span:last-child{font-weight:700;color:#fff}
+.ai-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.ai-fill{height:100%;border-radius:3px}
+.ev-list{overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.ev{padding:7px 9px;border-radius:3px;border-left:3px solid var(--border);background:rgba(15,23,42,.6);display:flex;gap:8px;font-size:10px}
+.ev:hover{background:rgba(30,44,69,.6)}
+.ev-time{color:var(--muted);flex-shrink:0;width:44px}
+.ev-badge{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;text-transform:uppercase;flex-shrink:0;height:fit-content;margin-top:1px}
+.ev-msg{color:var(--muted2);line-height:1.4}
+.vtable{width:100%;border-collapse:collapse;font-size:11px}
+.vtable thead th{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-size:9px;font-weight:700;text-transform:uppercase;text-align:left;background:rgba(7,11,19,.8)}
+.vtable tbody tr{border-bottom:1px solid rgba(30,44,69,.5);cursor:pointer;transition:background .12s}
+.vtable tbody tr:hover{background:rgba(30,44,69,.4)}
+.vtable tbody tr.sel{background:rgba(249,115,22,.08)}
+.vtable td{padding:8px 10px}
+.plate-badge{background:#fff;color:#000;font-weight:700;padding:2px 7px;border-radius:3px;font-size:10px;border:1px solid #aaa}
+.status-badge{padding:2px 7px;border-radius:3px;font-size:9px;font-weight:700;border:1px solid}
+.status-badge.normal{color:var(--green);border-color:rgba(5,150,105,.4);background:rgba(6,78,59,.3)}
+.status-badge.watchlist{color:var(--red);border-color:rgba(185,28,28,.4);background:rgba(69,10,10,.3)}
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--accent),var(--green))}
+.tnode{position:relative;margin-bottom:16px;animation:fadeIn .3s ease}
+.tnode-dot{position:absolute;left:-24px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--panel);border:2px solid var(--accent);color:var(--accent);font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.tnode-card{background:var(--panel2);border:1px solid var(--border2);border-radius:5px;padding:10px 12px}
+.tnode-card:hover{border-color:rgba(249,115,22,.4)}
+.tnode-cam{font-size:13px;font-weight:800;color:var(--accent)}
+.tnode-loc{font-size:11px;color:var(--muted2);font-weight:600}
+.tnode-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;font-size:10px;color:var(--muted)}
+.tnode-meta span b{color:#fff}
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.match-item{background:rgba(0,0,0,.3);padding:4px 7px;border-radius:3px;display:flex;justify-content:space-between;font-size:9px}
+.match-item span{color:var(--muted)}.match-item b{color:var(--green)}
+.alert-card{border:1px solid;border-radius:5px;padding:14px;margin-bottom:8px;transition:all .15s}
+.alert-card:hover{transform:translateX(2px)}
+.alert-card.critical{border-color:rgba(239,68,68,.4);background:rgba(69,10,10,.15)}
+.alert-card.high{border-color:rgba(249,115,22,.3);background:rgba(124,45,18,.1)}
+.alert-card.medium{border-color:rgba(245,158,11,.3);background:rgba(92,44,0,.1)}
+.alert-card.info{border-color:rgba(6,182,212,.3);background:rgba(8,51,68,.1)}
+.sev-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:var(--panel2);cursor:pointer;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted2);transition:all .15s}
+.sev-btn:hover{color:#fff;border-color:var(--muted)}.sev-btn.active{background:var(--accent);color:#000;border-color:transparent}
+.search-input{background:var(--panel2);border:1px solid var(--border2);color:#fff;padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:11px;outline:none;transition:border .15s}
+.search-input:focus{border-color:var(--accent)}.search-input::placeholder{color:var(--muted)}
+.filter-row{display:flex;align-items:center;gap:4px;background:rgba(7,11,19,.8);border:1px solid var(--border);border-radius:4px;padding:3px}
+.filter-btn{padding:3px 10px;border-radius:3px;border:none;background:transparent;cursor:pointer;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);transition:all .15s}
+.filter-btn:hover{color:#fff}.filter-btn.active{background:var(--accent);color:#000}
+.vp-metric{background:rgba(7,11,19,.9);padding:8px 10px;border-radius:4px;border:1px solid var(--border)}
+.vp-metric label{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700;display:block;margin-bottom:3px}
+.vp-metric value{font-size:13px;font-weight:700;color:#fff}
+.reid-bar{height:6px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:4px}
+.reid-fill{height:100%;border-radius:3px;background:var(--green);transition:width .4s ease}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(5px);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.6)}
+.modal-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.modal-body{flex:1;overflow:hidden;display:flex;gap:0;min-height:0}
+.map-legend{position:absolute;top:12px;left:12px;background:rgba(10,15,26,.92);border:1px solid var(--border);border-radius:5px;padding:12px;min-width:180px;z-index:2}
+.legend-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.legend-row{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted2);padding:3px 0}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cam-popup{position:absolute;background:var(--panel);border:1px solid var(--border2);border-radius:5px;padding:10px 12px;font-size:11px;z-index:5;min-width:160px;display:none;font-family:var(--mono)}
+#footer{background:rgba(7,11,19,.97);border-top:1px solid var(--border);padding:12px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;flex-shrink:0;font-size:10px}
+.footer-col{display:flex;flex-direction:column;gap:5px}
+.footer-head{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:5px}
+.footer-members{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-top:3px}
+.footer-member{color:var(--muted2)}.footer-member b{color:var(--accent)}
+.footer-info{background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:4px;padding:6px 8px}
+.footer-info label{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700;display:block}
+.footer-info value{font-size:12px;font-weight:800}
+.footer-email a{color:var(--muted2);text-decoration:none}.footer-email a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <div class="brand">
-      <div style="width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 14px rgba(249,115,22,0.35);">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49"/></svg>
-      </div>
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <h1 style="font-size:18px;font-weight:900;letter-spacing:.08em;color:#fff;line-height:1;font-family:var(--font-mono);">TRAFFIQ</h1>
-          <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(124,45,18,.6);color:#fb923c;border:1px solid rgba(154,52,18,.8);font-weight:700;font-family:var(--font-mono);">SIH 26127</span>
-        </div>
-        <div style="font-size:10px;letter-spacing:.12em;color:var(--text-muted);text-transform:uppercase;margin-top:2px;font-family:var(--font-mono);">City-Wide AI Traffic Intelligence</div>
-      </div>
+<div id="topbar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48 0a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
     </div>
-    <div style="background:rgba(15,23,42,.9);border:1px solid var(--border);padding:5px 14px;border-radius:9999px;display:flex;align-items:center;gap:10px;">
-      <div style="font-family:var(--font-mono);font-size:11px;display:flex;align-items:center;gap:8px;">
-        <span style="position:relative;display:flex;width:8px;height:8px;"><span style="position:absolute;width:100%;height:100%;border-radius:50%;background:#10b981;opacity:.75;animation:pulseGlow 2s infinite;"></span><span style="width:8px;height:8px;border-radius:50%;background:#10b981;"></span></span>
-        <span style="color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">SYSTEM STATUS:</span>
-        <span style="color:#10b981;font-weight:800;">ALL SYSTEMS OPERATIONAL</span>
-      </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:7px"><span class="brand-name">TRAFFIQ</span><span class="brand-tag">SIH 26127</span></div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:1px">City-Wide AI Traffic Intelligence</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div class="chips">
-        <div class="chip" style="border-color:rgba(16,185,129,.3);"><span style="color:#10b981;font-weight:700;">●</span> <span style="color:#fff;font-weight:700;">12/12</span> <span style="color:#64748b;">CAMS</span></div>
-        <div class="chip"><span style="color:#06b6d4;font-weight:700;">847</span> <span style="color:#64748b;">VEHICLES</span></div>
-        <div class="chip"><span style="color:#ef4444;font-weight:700;">23</span> <span style="color:#64748b;">ALERTS</span></div>
-      </div>
-      <div style="border-left:1px solid var(--border);padding-left:12px;text-align:right;font-family:var(--font-mono);">
-        <div style="font-size:12px;font-weight:800;color:#fff;letter-spacing:.06em;display:flex;align-items:center;gap:6px;justify-content:flex-end;">
-          <span style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:pulseGlow 2s infinite;"></span>
-          <span id="clock">13:42:21</span>
-          <span style="font-size:10px;color:#94a3b8;">IST</span>
-        </div>
-        <div style="font-size:9px;color:#64748b;letter-spacing:.08em;font-weight:600;">24 SEP 2026</div>
-      </div>
-      <button style="background:#f97316;color:#000;font-weight:800;border:none;cursor:pointer;padding:7px 14px;border-radius:4px;font-family:var(--font-mono);font-size:11px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(249,115,22,.3);" onclick="startDemoStory()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> DEMO STORY
-      </button>
-      <button style="background:#121c2e;color:#cbd5e1;border:1px solid #1e2c45;cursor:pointer;padding:7px 10px;border-radius:4px;font-family:var(--font-mono);font-size:11px;" onclick="toggleFullScreen()">⛶ FULL SCREEN</button>
-    </div>
-  </header>
-
-  <div class="main-wrapper">
-    <!-- SIDEBAR -->
-    <aside>
-      <nav class="flex-col">
-        <div class="nav-item active" data-page="cmd">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM5 5v14h14V5z" opacity="0.5"/><path d="M12 2L2 12h3v8h14v-8h3L12 2zm0 2.8L17.2 10H6.8L12 4.8z"/></svg>
-          COMMAND CENTER
-        </div>
-        <div class="nav-item" data-page="live">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zM2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12z"/><circle cx="12" cy="12" r="4"/></svg>
-          LIVE MONITORING
-        </div>
-        <div class="nav-item" data-page="vehicles">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.28l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/><circle cx="7.5" cy="14.5" r="1.5"/><circle cx="16.5" cy="14.5" r="1.5"/></svg>
-          VEHICLES
-        </div>
-        <div class="nav-item" data-page="journeys">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M16 11V5h6v6h-6zm-8 4v6h6v-6H8zm12-4V5l-6 6h6zM8 15v6l6-6H8zm-6-4V5h6v6H2zm6-6L2 11V5h6z"/></svg>
-          JOURNEYS
-        </div>
-        <div class="nav-item" data-page="map">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-          CITY MAP
-        </div>
-        <div class="nav-item" data-page="alerts">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2L1 21h22M12 6l7.53 13H4.47M11 10v4h2v-4m-2 6v2h2v-2"/></svg>
-          ALERTS
-        </div>
-        <div class="nav-item" data-page="analytics">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v18h18M7 14l5-5 4 4 5-5M7 14v7h14v-7z" opacity="0.3"/><path d="M21 3H3C1.9 3 1 3.9 1 5v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM7 14l5-5 4 4 5-5v2l-5 5-4-4-5 5H7z"/></svg>
-          ANALYTICS
-        </div>
-      </nav>
-      <div class="sys-matrix">
-        <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Sub-System Matrix</div>
-        <div class="sys-row"><span style="color:#94a3b8;">AI ENGINE</span><span style="color:#10b981;font-weight:700;">● ONLINE</span></div>
-        <div class="sys-row"><span style="color:#94a3b8;">API GATEWAY</span><span style="color:#10b981;font-weight:700;">● ONLINE</span></div>
-        <div class="sys-row"><span style="color:#94a3b8;">DATABASE</span><span style="color:#10b981;font-weight:700;">● POSTGIS</span></div>
-        <div style="border-top:1px solid var(--border);padding-top:6px;display:flex;justify-content:space-between;color:#64748b;font-size:10px;margin-top:2px;">
-          <span>UPTIME</span><span style="color:#fff;font-weight:700;">04:21:37</span>
-        </div>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main>
-      
-      <!-- PAGE 1: COMMAND CENTER -->
-      <div class="page active" id="page-cmd">
-        <div class="kpi-strip" style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-          <div class="kpi-card">
-            <div class="kpi-lbl">ACTIVE CAMERAS <span class="kpi-badge" style="color:#10b981;border-color:rgba(5,150,105,.6);background:rgba(6,78,59,.4);">STABLE</span></div>
-            <div class="kpi-val">12 / 12</div>
-            <div class="kpi-sub">100% OPERATIONAL</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-lbl">ACTIVE VEHICLES <span class="kpi-badge" style="color:#f97316;border-color:rgba(194,65,12,.6);background:rgba(124,45,18,.4);">LIVE FLOW</span></div>
-            <div class="kpi-val">847</div>
-            <div class="kpi-sub">+14 IN LAST 5 MIN</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-lbl">TRACKED JOURNEYS <span class="kpi-badge" style="color:#06b6d4;border-color:rgba(8,145,178,.6);background:rgba(8,51,68,.4);">RE-ID ON</span></div>
-            <div class="kpi-val">6,421</div>
-            <div class="kpi-sub">MULTI-CAMERA CORRELATED</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-lbl">ACTIVE ALERTS <span class="kpi-badge" style="color:#ef4444;border-color:rgba(185,28,28,.6);background:rgba(69,10,10,.4);">PRIORITY</span></div>
-            <div class="kpi-val" style="color:#ef4444;">23</div>
-            <div class="kpi-sub">3 CRITICAL WATCHLIST</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-lbl">AVG SPEED <span class="kpi-badge" style="color:#facc15;border-color:rgba(161,98,7,.6);background:rgba(66,32,6,.4);">NORMAL</span></div>
-            <div class="kpi-val">38.4 <span style="font-size:13px;font-weight:400;color:#94a3b8;">km/h</span></div>
-            <div class="kpi-sub">CORRIDOR STABLE</div>
-          </div>
-          <div class="kpi-card" style="border-right:1px solid var(--border);">
-            <div class="kpi-lbl">TRAFFIC LOAD <span class="kpi-badge" style="color:#fb923c;border-color:rgba(154,52,18,.6);background:rgba(124,45,18,.4);">INDEX</span></div>
-            <div class="kpi-val">72%</div>
-            <div class="kpi-sub">MODERATE-HIGH LOAD</div>
-          </div>
-        </div>
-
-        
-        <div class="layout-2col" style="flex:1;">
-          <div class="flex-col gap-2">
-            <div class="panel-header" style="margin:0; background:var(--panel-bg); padding:8px;">
-              <span class="font-bold">LIVE EDGE VISION PIPELINE</span>
-            </div>
-            <div class="cam-grid">
-              <div class="cam-container" onclick="openCam(1)">
-                <div class="scanline"></div>
-                <canvas id="cvs-c1"></canvas>
-                <div class="cam-overlay">
-                  <span class="cam-label">CAM-01 | RAJPURA JCT</span>
-                  <span class="cam-label text-green">LIVE</span>
-                </div>
-              </div>
-              <div class="cam-container" onclick="openCam(2)">
-                <div class="scanline"></div>
-                <canvas id="cvs-c2"></canvas>
-                <div class="cam-overlay">
-                  <span class="cam-label">CAM-02 | GT FLYOVER</span>
-                  <span class="cam-label text-green">LIVE</span>
-                </div>
-              </div>
-              <div class="cam-container" onclick="openCam(3)">
-                <div class="scanline"></div>
-                <canvas id="cvs-c3"></canvas>
-                <div class="cam-overlay">
-                  <span class="cam-label">CAM-03 | IND TOLLWAY</span>
-                  <span class="cam-label text-red">ALERT</span>
-                </div>
-              </div>
-              <div class="cam-container" onclick="openCam(4)">
-                <div class="scanline"></div>
-                <canvas id="cvs-c4"></canvas>
-                <div class="cam-overlay">
-                  <span class="cam-label">CAM-04 | METRO TML</span>
-                  <span class="cam-label text-green">LIVE</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="panel flex-col" style="height:100%;">
-            <div class="panel-header">
-              <span class="font-bold">AI NEURAL ENGINE TELEMETRY</span>
-              <span class="text-xs text-muted">FP16 TENSORRT</span>
-            </div>
-            <div class="ai-bar-wrap">
-              <div class="ai-bar-lbl"><span>DETECTION: YOLOv11x</span><span>98.2%</span></div>
-              <div class="ai-bar-bg"><div class="ai-bar-fill" style="width: 98.2%; background: var(--accent);"></div></div>
-            </div>
-            <div class="ai-bar-wrap">
-              <div class="ai-bar-lbl"><span>TRACKING: ByteTrack MOT</span><span>96.8%</span></div>
-              <div class="ai-bar-bg"><div class="ai-bar-fill" style="width: 96.8%; background: var(--cyan);"></div></div>
-            </div>
-            <div class="ai-bar-wrap">
-              <div class="ai-bar-lbl"><span>ANPR: PaddleOCR v4</span><span>94.1%</span></div>
-              <div class="ai-bar-bg"><div class="ai-bar-fill" style="width: 94.1%; background: var(--amber);"></div></div>
-            </div>
-            <div class="ai-bar-wrap">
-              <div class="ai-bar-lbl"><span>RE-ID: OSNet-AIN</span><span>92.7%</span></div>
-              <div class="ai-bar-bg"><div class="ai-bar-fill" style="width: 92.7%; background: var(--purple);"></div></div>
-            </div>
-            
-            <div class="flex gap-2 mb-4" style="margin-bottom:1rem; margin-top:0.5rem;">
-              <div class="chip flex-1 text-center">INF: 24.6 FPS</div>
-              <div class="chip flex-1 text-center">4 FEEDS</div>
-              <div class="chip flex-1 text-center">LAT: 42ms</div>
-            </div>
-            
-            <div class="panel-header mt-2" style="margin-top:1rem;">
-              <span class="font-bold">LIVE INTELLIGENCE FEED</span>
-            </div>
-            <div class="event-list" id="cmd-event-list">
-              <!-- populated by JS -->
-            </div>
-          </div>
-        </div>
-        
-        <div class="layout-2col" style="flex:1;">
-          <div class="panel" style="position:relative; padding:0;">
-            <div class="panel-header" style="position:absolute; top:10px; left:10px; right:10px; background:rgba(10,15,26,0.8); z-index:2; border:1px solid var(--border); border-radius:4px; padding:8px;">
-              <span class="font-bold">CITY GIS MAP - CROSS-CAMERA TRACKING</span>
-              <button class="btn btn-accent text-xs" onclick="triggerJourneyReconstruct()">RECONSTRUCT JOURNEY</button>
-            </div>
-            <div class="map-container" id="cmd-map-container">
-              <!-- SVG map inserted by JS -->
-            </div>
-          </div>
-          
-          <div class="panel">
-            <div class="panel-header">
-              <span class="font-bold">VEHICLE QUICK INSPECTOR</span>
-              <span class="badge">TARGET V-1027</span>
-            </div>
-            <div class="flex gap-4">
-              <div style="flex:1;">
-                <div class="text-xs text-muted mb-1">LICENSE PLATE</div>
-                <div class="text-xl font-bold mb-2">PB10XX1234</div>
-                <div class="text-xs text-muted mb-1">CLASSIFICATION</div>
-                <div class="font-bold mb-2">SEDAN | WHITE</div>
-                <div class="text-xs text-muted mb-1">STATUS</div>
-                <div class="text-green font-bold">NORMAL</div>
-              </div>
-              <div style="flex:1;">
-                <div class="text-xs text-muted mb-1">CURRENT NODE</div>
-                <div class="font-bold mb-2">CAM-04</div>
-                <div class="text-xs text-muted mb-1">VELOCITY</div>
-                <div class="font-bold mb-2">42 km/h</div>
-                <div class="text-xs text-muted mb-1">MATCH CONFIDENCE</div>
-                <div class="text-accent font-bold">94.2%</div>
-              </div>
-            </div>
-            <div class="mt-4 pt-4 border-t" style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
-              <div class="text-xs text-muted mb-2">VISUAL EMBEDDING FINGERPRINT (OSNet-AIN 512D)</div>
-              <div style="display:flex; flex-wrap:wrap; gap:2px; height:60px; overflow:hidden;">
-                <!-- Generated lines for embed -->
-                <script>
-                  for(let i=0;i<120;i++){
-                    let val = Math.random();
-                    let color = `rgba(249,115,22,${val})`;
-                    document.write(`<div style="width:4px; height:100%; background:${color};"></div>`);
-                  }
-                </script>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE 2: LIVE MONITORING -->
-      <div class="page" id="page-live" style="gap:0.75rem;">
-        <!-- Page Header -->
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="width:8px;height:8px;border-radius:50%;background:#f97316;animation:pulseGlow 2s infinite;"></span>
-              <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#e2e8f0;">Live Camera Surveillance Wall — 4 Active Feeds</span>
-              <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(6,78,59,.7);color:#10b981;border:1px solid rgba(5,150,105,.8);font-weight:700;font-family:var(--font-mono);display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#10b981;"></span>LIVE INGESTION</span>
-            </div>
-            <p style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-top:3px;">Click any feed to open full-screen camera inspection modal</p>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <button onclick="toggleNightVision()" style="background:#121c2e;color:#cbd5e1;border:1px solid #1e2c45;cursor:pointer;padding:6px 12px;border-radius:4px;font-family:var(--font-mono);font-size:11px;" id="nvbtn">🌙 NIGHT VISION</button>
-            <button onclick="document.querySelector('.nav-item[data-page=journeys]').click(); triggerJourneyReconstruct();" style="background:#f97316;color:#000;font-weight:800;border:none;cursor:pointer;padding:6px 14px;border-radius:4px;font-family:var(--font-mono);font-size:11px;display:flex;align-items:center;gap:6px;">
-              ✦ RECONSTRUCT V-1027 JOURNEY
-            </button>
-          </div>
-        </div>
-
-        <!-- 2×2 CAMERA GRID — full remaining height -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0;">
-
-          <!-- CAM-01 -->
-          <div style="background:var(--panel-bg);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;" onclick="openCam(1)">
-            <div style="background:#0b101c;border-bottom:1px solid var(--border);padding:7px 12px;display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
-                <span style="font-family:var(--font-mono);font-size:12px;font-weight:800;color:#f97316;">CAM-01</span>
-                <span style="color:#475569;">|</span>
-                <span style="font-size:12px;font-weight:600;color:#f1f5f9;">Rajpura Junction</span>
-              </div>
-              <span style="font-family:var(--font-mono);font-size:10px;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px;border:1px solid var(--border);color:#94a3b8;">29.4 FPS</span>
-            </div>
-            <div style="flex:1;position:relative;background:#000;min-height:0;">
-              <canvas id="cvs-l1" style="width:100%;height:100%;display:block;object-fit:cover;"></canvas>
-              <div style="position:absolute;inset:0;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.35) 50%);background-size:100% 4px;pointer-events:none;"></div>
-              <div style="position:absolute;top:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.1);">REC • <span id="live-ts1">13:42:21</span></div>
-              <div style="position:absolute;bottom:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:#10b981;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid rgba(16,185,129,.3);">AI DETECTION ACTIVE</div>
-              <div style="position:absolute;bottom:6px;right:8px;font-family:var(--font-mono);font-size:9px;color:#fff;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid #334155;"><strong style="color:#f97316;">23</strong> VEHICLES</div>
-            </div>
-            <div style="background:#090e18;padding:5px 12px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:#64748b;display:flex;justify-content:space-between;">
-              <span>NH-44 Northbound Corridor</span><span style="color:#06b6d4;font-weight:700;">1080P • 60Hz</span>
-            </div>
-          </div>
-
-          <!-- CAM-02 -->
-          <div style="background:var(--panel-bg);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;" onclick="openCam(2)">
-            <div style="background:#0b101c;border-bottom:1px solid var(--border);padding:7px 12px;display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
-                <span style="font-family:var(--font-mono);font-size:12px;font-weight:800;color:#f97316;">CAM-02</span>
-                <span style="color:#475569;">|</span>
-                <span style="font-size:12px;font-weight:600;color:#f1f5f9;">GT Road Flyover</span>
-              </div>
-              <span style="font-family:var(--font-mono);font-size:10px;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px;border:1px solid var(--border);color:#94a3b8;">28.8 FPS</span>
-            </div>
-            <div style="flex:1;position:relative;background:#000;min-height:0;">
-              <canvas id="cvs-l2" style="width:100%;height:100%;display:block;object-fit:cover;"></canvas>
-              <div style="position:absolute;inset:0;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.35) 50%);background-size:100% 4px;pointer-events:none;"></div>
-              <div style="position:absolute;top:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.1);">REC • 13:42:48</div>
-              <div style="position:absolute;bottom:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:#10b981;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid rgba(16,185,129,.3);">AI DETECTION ACTIVE</div>
-              <div style="position:absolute;bottom:6px;right:8px;font-family:var(--font-mono);font-size:9px;color:#fff;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid #334155;"><strong style="color:#f97316;">31</strong> VEHICLES</div>
-            </div>
-            <div style="background:#090e18;padding:5px 12px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:#64748b;display:flex;justify-content:space-between;">
-              <span>GT Expressway Mile 14</span><span style="color:#06b6d4;font-weight:700;">1080P • 60Hz</span>
-            </div>
-          </div>
-
-          <!-- CAM-03 -->
-          <div style="background:var(--panel-bg);border:1px solid rgba(239,68,68,.4);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;" onclick="openCam(3)">
-            <div style="background:#0b101c;border-bottom:1px solid rgba(239,68,68,.3);padding:7px 12px;display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:pulseGlow 2s infinite;"></span>
-                <span style="font-family:var(--font-mono);font-size:12px;font-weight:800;color:#ef4444;">CAM-03</span>
-                <span style="color:#475569;">|</span>
-                <span style="font-size:12px;font-weight:600;color:#f1f5f9;">Industrial Tollway</span>
-              </div>
-              <span style="font-family:var(--font-mono);font-size:10px;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px;border:1px solid var(--border);color:#94a3b8;">29.1 FPS</span>
-            </div>
-            <div style="flex:1;position:relative;background:#000;min-height:0;">
-              <canvas id="cvs-l3" style="width:100%;height:100%;display:block;object-fit:cover;"></canvas>
-              <div style="position:absolute;inset:0;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.35) 50%);background-size:100% 4px;pointer-events:none;"></div>
-              <div style="position:absolute;top:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.1);">REC • 13:47:12</div>
-              <div style="position:absolute;bottom:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:#ef4444;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid rgba(239,68,68,.4);">⚠ WATCHLIST DETECTED</div>
-              <div style="position:absolute;bottom:6px;right:8px;font-family:var(--font-mono);font-size:9px;color:#fff;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid #334155;"><strong style="color:#f97316;">19</strong> VEHICLES</div>
-            </div>
-            <div style="background:#090e18;padding:5px 12px;border-top:1px solid rgba(239,68,68,.2);font-family:var(--font-mono);font-size:10px;color:#64748b;display:flex;justify-content:space-between;">
-              <span>Freight Corridor Bypass</span><span style="color:#06b6d4;font-weight:700;">1080P • 60Hz</span>
-            </div>
-          </div>
-
-          <!-- CAM-04 -->
-          <div style="background:var(--panel-bg);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;" onclick="openCam(4)">
-            <div style="background:#0b101c;border-bottom:1px solid var(--border);padding:7px 12px;display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
-                <span style="font-family:var(--font-mono);font-size:12px;font-weight:800;color:#f97316;">CAM-04</span>
-                <span style="color:#475569;">|</span>
-                <span style="font-size:12px;font-weight:600;color:#f1f5f9;">Metro Terminal Interchange</span>
-              </div>
-              <span style="font-family:var(--font-mono);font-size:10px;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:3px;border:1px solid var(--border);color:#94a3b8;">29.7 FPS</span>
-            </div>
-            <div style="flex:1;position:relative;background:#000;min-height:0;">
-              <canvas id="cvs-l4" style="width:100%;height:100%;display:block;object-fit:cover;"></canvas>
-              <div style="position:absolute;inset:0;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.35) 50%);background-size:100% 4px;pointer-events:none;"></div>
-              <div style="position:absolute;top:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.1);">REC • 13:44:15</div>
-              <div style="position:absolute;bottom:6px;left:8px;font-family:var(--font-mono);font-size:9px;color:#10b981;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid rgba(16,185,129,.3);">AI DETECTION ACTIVE</div>
-              <div style="position:absolute;bottom:6px;right:8px;font-family:var(--font-mono);font-size:9px;color:#fff;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:3px;border:1px solid #334155;"><strong style="color:#f97316;">42</strong> VEHICLES</div>
-            </div>
-            <div style="background:#090e18;padding:5px 12px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:#64748b;display:flex;justify-content:space-between;">
-              <span>Outer Ring Boulevard</span><span style="color:#06b6d4;font-weight:700;">1080P • 60Hz</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-
-      <!-- PAGE 3: VEHICLES -->
-      <div class="page" id="page-vehicles">
-        <div class="panel-header">
-          <div class="flex gap-4 items-center">
-            <span class="font-bold">VEHICLE DATABASE</span>
-            <input type="text" id="veh-search" placeholder="Search ID or Plate..." style="background:#0f172a; border:1px solid var(--border); color:white; padding:4px 8px; border-radius:4px; font-family:var(--font-mono);">
-          </div>
-          <div class="flex gap-2">
-            <button class="btn btn-accent text-xs">ALL</button>
-            <button class="btn text-xs">WATCHLIST</button>
-            <button class="btn text-xs">NORMAL</button>
-          </div>
-        </div>
-        <div class="layout-2col">
-          <div class="panel" style="overflow-y:auto; padding:0;">
-            <table id="veh-table">
-              <thead>
-                <tr>
-                  <th>VEHICLE ID</th>
-                  <th>PLATE</th>
-                  <th>CLASS & COLOR</th>
-                  <th>NODE</th>
-                  <th>CAMS</th>
-                  <th>SPEED</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="tr-active cursor-pointer" onclick="selectVeh('V-1027')">
-                  <td class="text-accent">V-1027</td><td>PB10XX1234</td><td>SEDAN WHITE</td><td>CAM-04</td><td>3</td><td>42 km/h</td><td class="text-green">NORMAL</td>
-                </tr>
-                <tr class="cursor-pointer" onclick="selectVeh('V-2041')">
-                  <td>V-2041</td><td>HR26DK8899</td><td>SUV BLACK</td><td>CAM-03</td><td>2</td><td>54 km/h</td><td class="text-red">WATCHLIST</td>
-                </tr>
-                <tr class="cursor-pointer" onclick="selectVeh('V-3109')">
-                  <td>V-3109</td><td>DL01AB9921</td><td>SEDAN SILVER</td><td>CAM-02</td><td>2</td><td>37 km/h</td><td class="text-green">NORMAL</td>
-                </tr>
-                <tr class="cursor-pointer" onclick="selectVeh('V-4890')">
-                  <td>V-4890</td><td>CH01TC5512</td><td>BUS YELLOW</td><td>CAM-02</td><td>3</td><td>28 km/h</td><td class="text-green">NORMAL</td>
-                </tr>
-                <tr class="cursor-pointer" onclick="selectVeh('V-5120')">
-                  <td>V-5120</td><td>UP16BZ7733</td><td>TRUCK BLUE</td><td>CAM-06</td><td>2</td><td>32 km/h</td><td class="text-green">NORMAL</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="panel">
-            <div class="panel-header"><span class="font-bold">VEHICLE PROFILE</span><span id="vp-id" class="badge">V-1027</span></div>
-            <div class="flex-col gap-4">
-              <div class="flex justify-between items-center border-b pb-2" style="border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
-                <div><div class="text-xs text-muted">PLATE</div><div id="vp-plate" class="text-xl font-bold">PB10XX1234</div></div>
-                <div class="text-right"><div class="text-xs text-muted">CLASS</div><div id="vp-class" class="font-bold">SEDAN WHITE</div></div>
-              </div>
-              <div class="flex justify-between border-b pb-2" style="border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
-                <div><div class="text-xs text-muted">LAST SEEN</div><div id="vp-node">CAM-04 (13:44:15)</div></div>
-                <div class="text-right"><div class="text-xs text-muted">STATUS</div><div id="vp-status" class="text-green font-bold">NORMAL</div></div>
-              </div>
-              <div>
-                <div class="text-xs text-muted mb-1">RE-ID CONFIDENCE</div>
-                <div class="ai-bar-bg"><div class="ai-bar-fill" style="width:94%; background:var(--accent);"></div></div>
-                <div class="text-right text-xs mt-1">94.2%</div>
-              </div>
-              <button class="btn btn-accent mt-4" onclick="document.querySelector('.nav-item[data-page=\'journeys\']').click(); triggerJourneyReconstruct();">RECONSTRUCT JOURNEY IN MAP</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE 4: JOURNEYS -->
-      <div class="page" id="page-journeys">
-        <div class="panel-header">
-          <div class="flex gap-4 items-center">
-            <span class="font-bold">JOURNEY RECONSTRUCTION</span>
-            <input type="text" value="PB10XX1234" style="background:#0f172a; border:1px solid var(--border); color:white; padding:4px 8px; border-radius:4px; font-family:var(--font-mono);">
-            <button class="btn btn-accent text-xs" onclick="triggerJourneyReconstruct()">TRACK</button>
-          </div>
-          <div class="flex gap-2">
-            <button class="btn text-xs">V-1027</button>
-            <button class="btn text-xs">V-2041</button>
-            <button class="btn text-xs">V-3109</button>
-          </div>
-        </div>
-        <div class="kpi-strip mb-2">
-          <div class="kpi-card"><div class="kpi-lbl">TOTAL DISTANCE</div><div class="kpi-val text-xl">3.8 KM</div></div>
-          <div class="kpi-card"><div class="kpi-lbl">TRAVEL DURATION</div><div class="kpi-val text-xl">04:37 MIN</div></div>
-          <div class="kpi-card"><div class="kpi-lbl">AVG SPEED</div><div class="kpi-val text-xl">42 KM/H</div></div>
-          <div class="kpi-card"><div class="kpi-lbl">MATCH CONFIDENCE</div><div class="kpi-val text-xl text-green">94.2%</div></div>
-        </div>
-        <div class="layout-2col" style="flex:1;">
-          <div class="panel flex-col gap-4" style="overflow-y:auto;" id="journey-timeline">
-            <div class="text-muted text-sm text-center" style="margin-top:2rem;">Click TRACK to begin reconstruction...</div>
-            <!-- Populated by JS -->
-          </div>
-          <div class="panel" style="padding:0;">
-            <div class="map-container" id="journey-map-container">
-              <!-- SVG map inserted by JS -->
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE 5: CITY MAP -->
-      <div class="page" id="page-map">
-        <div class="panel flex-col" style="height:100%; padding:0; position:relative;">
-          <div class="panel-header" style="position:absolute; top:10px; left:10px; background:rgba(10,15,26,0.9); z-index:2; border:1px solid var(--border); border-radius:4px; padding:12px; width:250px;">
-            <div class="font-bold mb-2 border-b pb-2" style="border-bottom:1px solid var(--border); padding-bottom:0.5rem;">CAMERA NODES</div>
-            <div class="flex-col gap-2 text-xs">
-              <div class="flex items-center gap-2"><div style="width:10px;height:10px;border-radius:50%;background:var(--green);"></div> CAM-01: Rajpura Jct</div>
-              <div class="flex items-center gap-2"><div style="width:10px;height:10px;border-radius:50%;background:var(--green);"></div> CAM-02: GT Flyover</div>
-              <div class="flex items-center gap-2"><div style="width:10px;height:10px;border-radius:50%;background:var(--red);"></div> CAM-03: Ind Tollway</div>
-              <div class="flex items-center gap-2"><div style="width:10px;height:10px;border-radius:50%;background:var(--green);"></div> CAM-04: Metro Tml</div>
-              <div class="flex items-center gap-2"><div style="width:10px;height:10px;border-radius:50%;background:var(--green);"></div> CAM-05: Sec 14 Ring</div>
-              <div class="flex items-center gap-2"><div style="width:10px;height:10px;border-radius:50%;background:var(--green);"></div> CAM-06: North Freight</div>
-            </div>
-          </div>
-          <div class="map-container" id="full-map-container">
-            <!-- SVG inserted by JS -->
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE 6: ALERTS -->
-      <div class="page" id="page-alerts">
-        <div class="panel-header">
-          <span class="font-bold">SYSTEM ALERTS</span>
-          <div class="flex gap-2">
-            <button class="btn btn-accent text-xs">ALL</button>
-            <button class="btn text-xs">CRITICAL</button>
-            <button class="btn text-xs">HIGH</button>
-            <button class="btn text-xs">MEDIUM</button>
-            <button class="btn text-xs">INFO</button>
-          </div>
-        </div>
-        <div class="panel" style="flex:1; overflow-y:auto; background:var(--panel-bg);">
-          <div class="alert-card critical">
-            <div class="flex justify-between mb-1">
-              <span class="font-bold text-red">ALT-101 | PRIORITY WATCHLIST TARGET</span>
-              <span class="text-muted text-xs">13:47:12</span>
-            </div>
-            <div class="text-sm mb-1">CAM-03 | CONF: 91%</div>
-            <div class="text-sm text-muted">Vehicle V-2041 (HR26DK8899) on Municipal Stolen/Suspicious Watchlist.</div>
-            <div class="text-sm font-bold mt-2">Action: Dispatch Intercept Unit</div>
-          </div>
-          <div class="alert-card high">
-            <div class="flex justify-between mb-1">
-              <span class="font-bold text-accent">ALT-102 | CROSS-CAMERA VELOCITY ANOMALY</span>
-              <span class="text-muted text-xs">13:42:48</span>
-            </div>
-            <div class="text-sm mb-1">CAM-02 | CONF: 94%</div>
-            <div class="text-sm text-muted">Transit CAM-01→CAM-02 in 27s exceeding velocity bound.</div>
-            <div class="text-sm font-bold mt-2">Action: Log Speed Violation</div>
-          </div>
-          <div class="alert-card high">
-            <div class="flex justify-between mb-1">
-              <span class="font-bold text-accent">ALT-103 | UNAUTHORIZED ACCESS / NO PLATE</span>
-              <span class="text-muted text-xs">13:41:05</span>
-            </div>
-            <div class="text-sm mb-1">CAM-04 | CONF: 88%</div>
-            <div class="text-sm text-muted">Commercial vehicle entered Bus Transit Corridor without valid plate.</div>
-          </div>
-          <div class="alert-card medium">
-            <div class="flex justify-between mb-1">
-              <span class="font-bold text-amber">ALT-104 | CONGESTION THRESHOLD EXCEEDED</span>
-              <span class="text-muted text-xs">13:43:50</span>
-            </div>
-            <div class="text-sm mb-1">CAM-04 | CONF: 97%</div>
-            <div class="text-sm text-muted">Corridor density exceeded 85 vehicles/minute.</div>
-          </div>
-          <div class="alert-card info">
-            <div class="flex justify-between mb-1">
-              <span class="font-bold text-cyan">ALT-105 | EDGE VISION PIPELINE RE-INDEX</span>
-              <span class="text-muted text-xs">13:30:00</span>
-            </div>
-            <div class="text-sm mb-1">SYSTEM | CONF: 100%</div>
-            <div class="text-sm text-muted">Index updated with 12,400 embeddings.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE 7: ANALYTICS -->
-      <div class="page" id="page-analytics">
-        <div class="panel-header">
-          <span class="font-bold">TRAFFIC ANALYTICS</span>
-          <div class="flex gap-2">
-            <button class="btn btn-accent text-xs">LAST 1 HOUR</button>
-            <button class="btn text-xs">TODAY</button>
-            <button class="btn text-xs">THIS WEEK</button>
-          </div>
-        </div>
-        <div class="kpi-strip mb-4">
-          <div class="kpi-card"><div class="kpi-lbl">THROUGHPUT</div><div class="kpi-val">1,420 <span class="text-sm text-muted">VEH/HR</span></div></div>
-          <div class="kpi-card"><div class="kpi-lbl">MEAN SPEED</div><div class="kpi-val">38.4 <span class="text-sm text-muted">KM/H</span></div></div>
-          <div class="kpi-card"><div class="kpi-lbl">CONGESTION IDX</div><div class="kpi-val text-amber">72%</div></div>
-          <div class="kpi-card"><div class="kpi-lbl">JOURNEYS REC.</div><div class="kpi-val">6,421</div></div>
-        </div>
-        <div class="layout-2col" style="flex:1;">
-          <div class="panel flex-col">
-            <div class="panel-header border-none"><span class="font-bold">TRAFFIC VOLUME (08:00 - 14:00)</span></div>
-            <div style="flex:1; position:relative; min-height:200px;" id="chart-volume">
-              <!-- SVG chart inserted by JS -->
-            </div>
-          </div>
-          <div class="flex-col gap-4">
-            <div class="panel flex-col" style="flex:1;">
-              <div class="panel-header border-none"><span class="font-bold">VEHICLE DISTRIBUTION</span></div>
-              <div class="flex items-center justify-center gap-4" style="flex:1;">
-                <div style="width:120px; height:120px; border-radius:50%; background:conic-gradient(var(--accent) 0 48%, var(--cyan) 48% 72%, var(--purple) 72% 86%, var(--green) 86% 94%, var(--amber) 94% 100%);"></div>
-                <div class="flex-col gap-1 text-xs">
-                  <div><span style="color:var(--accent);">■</span> Sedans 48%</div>
-                  <div><span style="color:var(--cyan);">■</span> SUVs 24%</div>
-                  <div><span style="color:var(--purple);">■</span> Trucks 14%</div>
-                  <div><span style="color:var(--green);">■</span> Buses 8%</div>
-                  <div><span style="color:var(--amber);">■</span> 2-Wheel 6%</div>
-                </div>
-              </div>
-            </div>
-            <div class="panel flex-col" style="flex:1;">
-              <div class="panel-header border-none"><span class="font-bold">CORRIDOR SPEEDS (AVG vs LIMIT)</span></div>
-              <div class="flex-col gap-2 text-xs" style="flex:1; justify-content:center;">
-                <div><div class="flex justify-between mb-1"><span>NH-44 North</span><span>48 / 60</span></div><div class="ai-bar-bg"><div class="ai-bar-fill" style="width:80%; background:var(--green);"></div></div></div>
-                <div><div class="flex justify-between mb-1"><span>GT Expwy</span><span>36 / 50</span></div><div class="ai-bar-bg"><div class="ai-bar-fill" style="width:72%; background:var(--green);"></div></div></div>
-                <div><div class="flex justify-between mb-1"><span>West Ind.</span><span>52 / 60</span></div><div class="ai-bar-bg"><div class="ai-bar-fill" style="width:86%; background:var(--amber);"></div></div></div>
-                <div><div class="flex justify-between mb-1"><span>Metro Tml</span><span>24 / 40</span></div><div class="ai-bar-bg"><div class="ai-bar-fill" style="width:60%; background:var(--cyan);"></div></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </main>
   </div>
+  <div class="status-pill"><span class="status-dot"></span><span style="color:var(--muted);font-size:10px;font-weight:600">SYSTEM STATUS:</span><span style="color:var(--green);font-size:11px">ALL SYSTEMS OPERATIONAL</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="chips"><div class="chip"><b style="color:var(--green)">12/12</b> CAMS</div><div class="chip"><b style="color:var(--cyan)">847</b> VEHICLES</div><div class="chip"><b style="color:var(--red)">23</b> ALERTS</div></div>
+    <div class="hclock"><div class="time" id="clock">--:--:--</div><div class="date">25 SEP 2026 IST</div></div>
+    <button class="btn" onclick="toggleFS()">&#x26F6; FULL SCREEN</button>
+  </div>
+</div>
 
-  <!-- FOOTER -->
-  <footer style="background:#070b13;border-top:1px solid var(--border);">
-    <!-- Left: Brand -->
-    <div style="display:flex;flex-direction:column;gap:10px;justify-content:space-between;">
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="width:22px;height:22px;border-radius:4px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49"/></svg>
-          </div>
-          <span style="font-size:15px;font-weight:900;letter-spacing:.08em;color:#fff;font-family:var(--font-mono);">TRAFFIQ</span>
-        </div>
-        <div style="font-size:10px;font-weight:700;color:#cbd5e1;text-transform:uppercase;letter-spacing:.06em;">City-Wide AI Traffic Intelligence</div>
-      </div>
-      <div style="border-left:2px solid #f97316;padding-left:10px;background:rgba(0,0,0,.25);border-radius:0 4px 4px 0;">
-        <p style="font-size:10px;color:#cbd5e1;font-style:italic;line-height:1.4;">"One Vehicle. Multiple Cameras. One Continuous Journey."</p>
-      </div>
-      <div style="font-size:9px;color:#64748b;">Multi-camera ANPR tracking &amp; spatial-temporal mobility analytics.</div>
+<div id="shell">
+  <nav id="sidebar">
+    <div class="nav-section">Navigation</div>
+    <div class="nav-item active" data-page="cmd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Command Center</div>
+    <div class="nav-item" data-page="live"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48 0a6 6 0 0 1 0-8.49"/></svg>Live Monitoring</div>
+    <div class="nav-item" data-page="vehicles"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>Vehicles</div>
+    <div class="nav-item" data-page="journey"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Journey Tracker</div>
+    <div class="nav-item" data-page="citymap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>City Map</div>
+    <div class="nav-item" data-page="alerts"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alerts</div>
+    <div class="nav-item" data-page="analytics"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+    <div class="sys-matrix">
+      <div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Sub-System Matrix</div>
+      <div class="sys-row"><span>AI ENGINE</span><span class="on">&#9679; ONLINE</span></div>
+      <div class="sys-row"><span>ANPR OCR</span><span class="on">&#9679; ACTIVE</span></div>
+      <div class="sys-row"><span>RE-ID ENGINE</span><span class="on">&#9679; ONLINE</span></div>
+      <div class="sys-row"><span>DATABASE</span><span class="on">&#9679; POSTGIS</span></div>
+      <div style="border-top:1px solid var(--border);padding-top:5px;display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-top:3px"><span>Uptime</span><span style="color:#fff;font-weight:700" id="uptime-el">04:21:37</span></div>
     </div>
-    <!-- Center: Team -->
-    <div style="border-left:1px solid rgba(30,44,69,.8);padding-left:20px;display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;align-items:center;gap:6px;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Team TraffiQ-1
-      </div>
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <div style="font-size:9px;color:#64748b;text-transform:uppercase;font-weight:600;">Team Leader</div>
-        <div style="font-size:11px;font-weight:700;color:#fff;">Golu Kumar Singh</div>
-      </div>
-      <div style="border-top:1px solid #1e293b;padding-top:6px;">
-        <div style="font-size:9px;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Team Members</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px;color:#cbd5e1;">
-          <div><span style="color:#f97316;font-weight:700;">1.</span> Rajveer Singh</div>
-          <div><span style="color:#f97316;font-weight:700;">2.</span> Harshit Sharma</div>
-          <div><span style="color:#f97316;font-weight:700;">3.</span> Ankit Kumar</div>
-          <div><span style="color:#f97316;font-weight:700;">4.</span> Himanshi</div>
-          <div><span style="color:#f97316;font-weight:700;">5.</span> Vaibhav Sharma</div>
-        </div>
-      </div>
-    </div>
-    <!-- Right: SIH Info -->
-    <div style="border-left:1px solid rgba(30,44,69,.8);padding-left:20px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
-      <div>
-        <div style="display:flex;align-items:center;gap:6px;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
-          Smart India Hackathon 2026
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-          <div style="background:#0b101c;padding:7px;border-radius:4px;border:1px solid #1e293b;">
-            <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Problem Statement</div>
-            <div style="font-weight:800;color:#f97316;margin-top:2px;font-size:12px;">SIH 26127</div>
-          </div>
-          <div style="background:#0b101c;padding:7px;border-radius:4px;border:1px solid #1e293b;">
-            <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Team ID</div>
-            <div style="font-weight:800;color:#fff;margin-top:2px;font-size:12px;">143412</div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#0b101c;padding:8px 10px;border-radius:4px;border:1px solid #1e293b;">
-        <div style="font-size:9px;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:3px;">Contact</div>
-        <a href="mailto:golusingh94712@gmail.com" style="color:#cbd5e1;text-decoration:none;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#cbd5e1'">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          golusingh94712@gmail.com
-        </a>
-      </div>
-    </div>
-  </footer>
+  </nav>
 
+  <div id="main">
 
-  <!-- MODALS -->
-  
-  <!-- CAMERA MODAL -->
-  <div class="modal-overlay" id="cam-modal">
-    <div class="modal-content">
-      <div class="modal-header">
+    <!-- PAGE 1: COMMAND CENTER -->
+    <div class="page active" id="page-cmd">
+      <div class="kpi-strip">
+        <div class="kpi"><div class="kpi-label">Active Cameras <span class="kpi-badge" style="color:var(--green);border-color:rgba(5,150,105,.5);background:rgba(6,78,59,.3)">STABLE</span></div><div class="kpi-val">12/12</div><div class="kpi-sub">100% OPERATIONAL</div></div>
+        <div class="kpi"><div class="kpi-label">Active Vehicles <span class="kpi-badge" style="color:var(--cyan);border-color:rgba(8,145,178,.5);background:rgba(8,51,68,.3)">LIVE</span></div><div class="kpi-val">847</div><div class="kpi-sub">+14 LAST 5 MIN</div></div>
+        <div class="kpi"><div class="kpi-label">Tracked Journeys <span class="kpi-badge" style="color:var(--accent);border-color:rgba(194,65,12,.5);background:rgba(124,45,18,.3)">RE-ID</span></div><div class="kpi-val">6,421</div><div class="kpi-sub">94.2% MATCH RATE</div></div>
+        <div class="kpi"><div class="kpi-label">Active Alerts <span class="kpi-badge" style="color:var(--red);border-color:rgba(185,28,28,.5);background:rgba(69,10,10,.3)">PRIORITY</span></div><div class="kpi-val" style="color:var(--red)">23</div><div class="kpi-sub">3 CRITICAL</div></div>
+        <div class="kpi"><div class="kpi-label">Avg Speed</div><div class="kpi-val">38.4 <span style="font-size:12px;font-weight:400;color:var(--muted)">km/h</span></div><div class="kpi-sub">CORRIDOR STABLE</div></div>
+        <div class="kpi"><div class="kpi-label">Traffic Load</div><div class="kpi-val" style="color:var(--amber)">72%</div><div class="kpi-sub">MODERATE-HIGH</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:7fr 5fr;gap:12px;min-height:0;flex:1">
+        <div style="display:flex;flex-direction:column;gap:8px;min-height:0">
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+            <span class="ph-title"><span style="width:7px;height:7px;border-radius:50%;background:var(--red);animation:blink 1.5s infinite"></span>LIVE EDGE VISION PIPELINE &#8212; 4 FEEDS</span>
+            <span style="font-size:9px;color:var(--muted)">Click any feed to inspect</span>
+          </div>
+          <div class="cam-grid" id="cmd-cam-grid" style="flex:1;min-height:0"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden">
+          <div class="panel" style="flex-shrink:0">
+            <div class="ph"><span class="ph-title">AI Neural Engine Telemetry</span><span style="font-size:9px;color:var(--muted)">FP16 TensorRT</span></div>
+            <div class="pb">
+              <div class="ai-row"><div class="ai-row-top"><span>DETECTION &#8212; YOLOv11x</span><span>98.2%</span></div><div class="ai-bar"><div class="ai-fill" style="width:98.2%;background:var(--accent)"></div></div></div>
+              <div class="ai-row"><div class="ai-row-top"><span>TRACKING &#8212; ByteTrack MOT</span><span>96.8%</span></div><div class="ai-bar"><div class="ai-fill" style="width:96.8%;background:var(--cyan)"></div></div></div>
+              <div class="ai-row"><div class="ai-row-top"><span>ANPR &#8212; PaddleOCR v4</span><span>94.1%</span></div><div class="ai-bar"><div class="ai-fill" style="width:94.1%;background:var(--amber)"></div></div></div>
+              <div class="ai-row" style="margin-bottom:0"><div class="ai-row-top"><span>RE-ID &#8212; OSNet-AIN</span><span>92.7%</span></div><div class="ai-bar"><div class="ai-fill" style="width:92.7%;background:var(--purple)"></div></div></div>
+              <div style="display:flex;gap:6px;margin-top:10px">
+                <div style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:4px;padding:5px;text-align:center;font-size:10px"><div style="color:var(--muted);font-size:8px;font-weight:700;text-transform:uppercase">Inference</div><b style="color:#fff">24.6 FPS</b></div>
+                <div style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:4px;padding:5px;text-align:center;font-size:10px"><div style="color:var(--muted);font-size:8px;font-weight:700;text-transform:uppercase">Feeds</div><b style="color:#fff">4 ACTIVE</b></div>
+                <div style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:4px;padding:5px;text-align:center;font-size:10px"><div style="color:var(--muted);font-size:8px;font-weight:700;text-transform:uppercase">Latency</div><b style="color:#fff">42 ms</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
+            <div class="ph"><span class="ph-title">Live Intelligence Feed</span><button class="btn" onclick="addPingEvent()" style="padding:3px 8px;font-size:9px">+ PING</button></div>
+            <div class="pb" style="flex:1;overflow-y:auto"><div class="ev-list" id="event-list"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:7fr 5fr;gap:12px;min-height:280px;flex-shrink:0">
+        <div class="panel" style="display:flex;flex-direction:column;overflow:hidden">
+          <div class="ph">
+            <span class="ph-title">City GIS &#8212; Cross-Camera Trajectory Map</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-accent" onclick="runReconstruct()" id="reconstruct-btn" style="font-size:10px;padding:5px 10px">&#9889; RECONSTRUCT V-1027</button>
+              <button class="btn" onclick="resetReconstruct()" style="font-size:10px;padding:5px 8px">&#8635; RESET</button>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;position:relative" id="cmd-map-wrap">
+            <div id="cmd-map-status" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(10,15,26,.9);border:1px solid var(--border2);border-radius:4px;padding:6px 14px;font-size:10px;color:var(--muted);font-weight:600;z-index:3;white-space:nowrap">Click RECONSTRUCT to begin multi-camera trajectory synthesis</div>
+          </div>
+        </div>
+        <div class="panel" style="display:flex;flex-direction:column">
+          <div class="ph"><span class="ph-title">Vehicle Quick Inspector</span><span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(249,115,22,.15);color:var(--accent);border:1px solid rgba(249,115,22,.3);font-weight:700">TARGET</span></div>
+          <div class="pb" style="flex:1;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:4px">Vehicle ID</div><div style="font-size:18px;font-weight:900;color:var(--accent)">V-1027</div></div>
+              <div style="background:#fff;color:#000;font-weight:800;padding:5px 12px;border-radius:4px;border:2px solid #aaa;font-size:13px;letter-spacing:.04em"><span style="font-size:9px;color:#888;font-weight:700;margin-right:3px">IND</span>PB10XX1234</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div class="vp-metric"><label>Classification</label><value>SEDAN &#8226; WHITE</value></div>
+              <div class="vp-metric"><label>Current Node</label><value style="color:var(--cyan)">CAM-04</value></div>
+              <div class="vp-metric"><label>First Seen</label><value>13:42:21</value></div>
+              <div class="vp-metric"><label>Last Seen</label><value>13:46:58</value></div>
+              <div class="vp-metric"><label>Distance</label><value style="color:var(--accent)">3.8 KM</value></div>
+              <div class="vp-metric"><label>Avg Speed</label><value>42 KM/H</value></div>
+            </div>
+            <div class="vp-metric">
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px"><label style="display:inline">Cross-Camera RE-ID Confidence</label><span style="color:var(--green);font-size:12px;font-weight:800">94.2%</span></div>
+              <div class="reid-bar"><div class="reid-fill" style="width:94.2%"></div></div>
+              <div style="font-size:9px;color:var(--muted);margin-top:4px">OSNet-AIN 512-dim cosine similarity</div>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:10px;color:var(--muted)">Corridor: <span style="color:var(--accent);font-weight:700">CAM-01 &#8594; CAM-02 &#8594; CAM-04</span></div>
+              <button class="btn btn-accent" onclick="navTo('journey');runReconstruct()" style="font-size:10px;padding:5px 10px">VIEW JOURNEY &#8599;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: LIVE MONITORING -->
+    <div class="page" id="page-live">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
         <div>
-          <span class="font-bold text-lg" id="cm-title">CAM-01 | RAJPURA JCT</span>
-          <span class="badge ml-2 status" style="margin-left:0.5rem;">LIVE</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:blink 1.5s infinite"></span>
+            <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em">Live Camera Surveillance Wall</span>
+            <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(6,78,59,.5);color:var(--green);border:1px solid rgba(5,150,105,.6);font-weight:700">4 FEEDS ACTIVE</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted)">Click any camera feed to open full inspection modal with live detections</div>
         </div>
-        <div class="flex gap-2">
-          <button class="btn btn-accent text-xs">TOGGLE NIGHT VISION</button>
-          <button class="btn text-xs text-red border" style="border-color:var(--red);" onclick="closeModal('cam-modal')">✕ CLOSE</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="toggleNV()" id="nv-btn">&#127769; NIGHT VISION</button>
+          <button class="btn btn-accent" onclick="navTo('journey');runReconstruct()" style="font-size:10px">&#10022; RECONSTRUCT V-1027 JOURNEY</button>
         </div>
       </div>
-      <div class="modal-body layout-2col p-4" style="padding:1rem;">
-        <div class="cam-container" style="border:1px solid var(--accent); cursor:default; height:100%;">
-          <div class="scanline"></div>
-          <canvas id="cvs-modal"></canvas>
-        </div>
-        <div class="flex-col gap-4 overflow-y-auto">
-          <div class="panel">
-            <div class="panel-header"><span class="font-bold">NODE SPECIFICATIONS</span></div>
-            <div class="grid" style="grid-template-columns: 1fr 1fr; gap:0.5rem; font-size:0.8rem;">
-              <div class="text-muted">RESOLUTION</div><div>4K / 3840x2160</div>
-              <div class="text-muted">FRAMERATE</div><div>60 FPS</div>
-              <div class="text-muted">ENCODING</div><div>H.265 HEVC</div>
-              <div class="text-muted">EDGE PIPELINE</div><div>Jetson Orin Nano</div>
-              <div class="text-muted">MODELS</div><div>YOLOv11x + OSNet</div>
+      <div class="cam-grid" id="live-cam-grid" style="flex:1;min-height:0"></div>
+    </div>
+
+    <!-- PAGE 3: VEHICLES -->
+    <div class="page" id="page-vehicles">
+      <div class="panel" style="flex-shrink:0">
+        <div class="ph">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="ph-title">Vehicle Intelligence &amp; Track Database</span>
+            <span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.3);font-weight:700">847 TARGETS ENROLLED</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" class="search-input" id="veh-search" placeholder="Search plate, ID, type..." oninput="filterVehicles()">
+            <div class="filter-row" id="veh-status-filter">
+              <button class="filter-btn active" onclick="setVehFilter('ALL',this)">ALL</button>
+              <button class="filter-btn" onclick="setVehFilter('WATCHLIST',this)">WATCHLIST</button>
+              <button class="filter-btn" onclick="setVehFilter('NORMAL',this)">NORMAL</button>
             </div>
           </div>
-          <div class="panel flex-1">
-            <div class="panel-header"><span class="font-bold">LIVE DETECTIONS</span></div>
-            <table style="font-size:0.75rem;">
-              <thead><tr><th>ID</th><th>TYPE</th><th>CONF</th><th>PLATE</th><th>SPD</th></tr></thead>
-              <tbody>
-                <tr><td class="text-accent">V-1027</td><td>SEDAN</td><td>98%</td><td>PB10XX1234</td><td>42</td></tr>
-                <tr><td>V-3109</td><td>SUV</td><td>95%</td><td>DL01AB9921</td><td>37</td></tr>
-                <tr><td>V-4890</td><td>BUS</td><td>96%</td><td>CH01TC5512</td><td>28</td></tr>
-                <tr><td>V-5120</td><td>TRUCK</td><td>92%</td><td>UP16BZ7733</td><td>32</td></tr>
-              </tbody>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:8fr 4fr;gap:12px;flex:1;min-height:0">
+        <div class="panel" style="overflow:hidden;display:flex;flex-direction:column">
+          <div style="overflow-y:auto;flex:1">
+            <table class="vtable" id="veh-table">
+              <thead><tr><th>Vehicle ID</th><th>License Plate</th><th>Class &amp; Color</th><th>Current Node</th><th>Cams</th><th>Avg Speed</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="veh-tbody"></tbody>
             </table>
-            <button class="btn btn-accent mt-4" style="margin-top:auto;" onclick="closeModal('cam-modal'); document.querySelector('.nav-item[data-page=\'journeys\']').click(); triggerJourneyReconstruct();">RECONSTRUCT JOURNEY: V-1027</button>
+          </div>
+        </div>
+        <div class="panel" style="display:flex;flex-direction:column;overflow:hidden">
+          <div class="ph"><span class="ph-title">Vehicle Profile</span><span id="vp-badge" style="font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;color:var(--accent);background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3)">V-1027</span></div>
+          <div class="pb" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px" id="vp-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 4: JOURNEY TRACKER -->
+    <div class="page" id="page-journey">
+      <div class="panel" style="flex-shrink:0">
+        <div class="ph">
+          <span class="ph-title">Vehicle Journey Reconstruction Engine</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" class="search-input" id="journey-search" placeholder="Plate or Vehicle ID..." value="PB10XX1234" style="width:200px">
+            <button class="btn btn-accent" onclick="searchJourney()">TRACK</button>
+            <div style="display:flex;gap:4px">
+              <button class="btn" onclick="quickJourney('V-1027','PB10XX1234')">V-1027</button>
+              <button class="btn" onclick="quickJourney('V-2041','HR26DK8899')">V-2041</button>
+              <button class="btn" onclick="quickJourney('V-3109','DL01AB9921')">V-3109</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex-shrink:0">
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">Total Distance</div><div class="kpi-val" id="jkpi-dist">3.8 <span style="font-size:12px;font-weight:400;color:var(--muted)">KM</span></div><div class="kpi-sub">Road graph estimate</div></div>
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">Travel Duration</div><div class="kpi-val" style="color:var(--accent)" id="jkpi-dur">04:37 <span style="font-size:12px;font-weight:400;color:var(--muted)">MIN</span></div><div class="kpi-sub">Transit between nodes</div></div>
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">Avg Speed</div><div class="kpi-val" id="jkpi-spd">42 <span style="font-size:12px;font-weight:400;color:var(--muted)">KM/H</span></div><div class="kpi-sub">Within legal limit</div></div>
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">RE-ID Confidence</div><div class="kpi-val" style="color:var(--green)" id="jkpi-conf">94.2%</div><div class="kpi-sub">OSNet visual + ANPR</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:5fr 7fr;gap:12px;flex:1;min-height:0">
+        <div class="panel" style="overflow:hidden;display:flex;flex-direction:column">
+          <div class="ph"><span class="ph-title">Chronological Node Timeline</span><span style="font-size:10px;color:var(--muted)" id="j-vehicle-label">V-1027 &#8212; SEDAN WHITE</span></div>
+          <div class="pb" style="flex:1;overflow-y:auto"><div class="timeline" id="journey-timeline"></div></div>
+        </div>
+        <div class="panel" style="display:flex;flex-direction:column;overflow:hidden">
+          <div class="ph">
+            <span class="ph-title">Spatial Trajectory Map</span>
+            <button class="btn btn-accent" onclick="runReconstruct()" style="font-size:10px;padding:5px 10px">&#9889; ANIMATE ROUTE</button>
+          </div>
+          <div style="flex:1;min-height:0;position:relative" id="journey-map-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 5: CITY MAP -->
+    <div class="page" id="page-citymap">
+      <div class="panel" style="flex-shrink:0"><div class="ph"><span class="ph-title">City-Wide Camera Network &#8212; 12 Edge Nodes</span><span style="font-size:9px;color:var(--muted)">Click any camera node to view details and inspect feed</span></div></div>
+      <div class="panel" style="flex:1;position:relative;overflow:hidden;min-height:0">
+        <div class="map-legend">
+          <div class="legend-title">Camera Nodes</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--green)"></div>Online (Normal)</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--red)"></div>Alert Active</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--muted)"></div>Offline</div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-size:9px;color:var(--muted)">
+            <div class="legend-row"><div class="legend-dot" style="background:var(--accent)"></div>Reconstructed Route</div>
+          </div>
+        </div>
+        <div style="position:absolute;top:12px;right:12px;background:rgba(10,15,26,.92);border:1px solid var(--border);border-radius:5px;padding:10px 12px;z-index:2;font-size:10px;width:170px">
+          <div style="color:var(--muted);font-weight:700;margin-bottom:6px;font-size:9px;text-transform:uppercase">Network Status</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--muted2)">Total Nodes</span><span style="color:#fff;font-weight:700">12</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--muted2)">Online</span><span style="color:var(--green);font-weight:700">11</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--muted2)">Alert</span><span style="color:var(--red);font-weight:700">1</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted2)">Throughput</span><span style="color:var(--accent);font-weight:700">847 veh</span></div>
+        </div>
+        <div class="cam-popup" id="cam-popup"></div>
+        <div id="city-map-svg-wrap" style="width:100%;height:100%"></div>
+      </div>
+    </div>
+
+    <!-- PAGE 6: ALERTS -->
+    <div class="page" id="page-alerts">
+      <div class="panel" style="flex-shrink:0">
+        <div class="ph">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="ph-title" style="color:var(--red)">Incident Response &amp; Alert Center</span>
+            <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(69,10,10,.5);color:var(--red);border:1px solid rgba(185,28,28,.4);font-weight:700">23 ACTIVE</span>
+          </div>
+          <div style="display:flex;gap:4px" id="sev-filter">
+            <button class="sev-btn active" onclick="filterAlerts('ALL',this)">ALL</button>
+            <button class="sev-btn" onclick="filterAlerts('CRITICAL',this)" style="color:#f87171">CRITICAL</button>
+            <button class="sev-btn" onclick="filterAlerts('HIGH',this)" style="color:#fb923c">HIGH</button>
+            <button class="sev-btn" onclick="filterAlerts('MEDIUM',this)" style="color:#fbbf24">MEDIUM</button>
+            <button class="sev-btn" onclick="filterAlerts('INFO',this)" style="color:var(--cyan)">INFO</button>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding-bottom:8px" id="alerts-container"></div>
+    </div>
+
+    <!-- PAGE 7: ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="panel" style="flex-shrink:0">
+        <div class="ph">
+          <span class="ph-title">Urban Traffic Intelligence &amp; Spatial Analytics</span>
+          <div style="display:flex;gap:4px" id="time-filter">
+            <button class="sev-btn" onclick="setTimeRange('1H',this)">LAST 1H</button>
+            <button class="sev-btn active" onclick="setTimeRange('TODAY',this)">TODAY</button>
+            <button class="sev-btn" onclick="setTimeRange('WEEK',this)">THIS WEEK</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex-shrink:0">
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">Hourly Throughput</div><div class="kpi-val" id="a-tp">1,420 <span style="font-size:11px;font-weight:400;color:var(--muted)">veh/hr</span></div><div class="kpi-sub">Peak: 10:00-11:00</div></div>
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">City-Wide Mean Speed</div><div class="kpi-val" style="color:var(--accent)" id="a-spd">38.4 <span style="font-size:11px;font-weight:400;color:var(--muted)">km/h</span></div><div class="kpi-sub">Legal bound: 50 km/h</div></div>
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">Congestion Index</div><div class="kpi-val" style="color:var(--amber)" id="a-ci">72%</div><div class="kpi-sub">Moderate-High load</div></div>
+        <div class="kpi panel" style="border-radius:5px"><div class="kpi-label">Reconstructed Journeys</div><div class="kpi-val" style="color:var(--cyan)" id="a-journeys">6,421</div><div class="kpi-sub">94.2% RE-ID match</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:7fr 5fr;gap:12px;flex:1;min-height:0">
+        <div class="panel" style="display:flex;flex-direction:column;overflow:hidden">
+          <div class="ph"><span class="ph-title">Traffic Volume Timeline</span><span style="font-size:9px;color:var(--muted)">HOURLY BINS</span></div>
+          <div style="flex:1;min-height:0;padding:10px 14px;position:relative"><canvas id="vol-chart" style="display:block;width:100%;height:100%"></canvas></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;min-height:0">
+          <div class="panel" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+            <div class="ph"><span class="ph-title">Vehicle Type Distribution</span></div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px">
+              <canvas id="pie-chart" width="120" height="120"></canvas>
+              <div id="pie-legend" style="display:flex;flex-direction:column;gap:5px;font-size:10px"></div>
+            </div>
+          </div>
+          <div class="panel" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+            <div class="ph"><span class="ph-title">Corridor Speed vs Limit</span></div>
+            <div style="flex:1;padding:10px 14px;min-height:0;overflow-y:auto" id="corridor-chart"></div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- DEMO STORY MODAL -->
-  <div class="modal-overlay" style="background:#040810; z-index:1000;" id="demo-modal">
-    <div class="flex-col" style="width:100%; height:100%;">
-      <div class="modal-header border-b" style="border-bottom:1px solid var(--border);">
-        <div class="brand">
-          <h1 class="text-xl font-bold text-accent">TRAFFIQ</h1>
-          <span class="badge" id="demo-scene-badge">SCENE 1 OF 10</span>
-        </div>
-        <div class="flex gap-2">
-          <button class="btn" id="demo-pause-btn" onclick="toggleDemoPause()">⏸ PAUSE</button>
-          <button class="btn" onclick="resetDemo()">↺ RESET</button>
-          <button class="btn btn-accent" onclick="exitDemo()">✕ EXIT DEMO</button>
-        </div>
+  </div>
+</div>
+
+<div id="footer">
+  <div class="footer-col">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div class="brand-icon" style="width:24px;height:24px;border-radius:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48 0a6 6 0 0 1 0-8.49"/></svg></div>
+      <span style="font-size:14px;font-weight:900;letter-spacing:.08em;color:#fff">TRAFFIQ</span>
+    </div>
+    <div style="color:var(--muted);font-style:italic;border-left:2px solid var(--accent);padding-left:8px;line-height:1.4;font-size:10px">"One Vehicle. Multiple Cameras. One Continuous Journey."</div>
+    <div style="color:var(--muted);font-size:9px">Multi-camera ANPR tracking &amp; spatial-temporal mobility analytics.</div>
+  </div>
+  <div class="footer-col" style="border-left:1px solid var(--border);padding-left:16px">
+    <div class="footer-head">Team TraffiQ-1</div>
+    <div style="font-size:9px;color:var(--muted)">Team Leader: <strong style="color:#fff">Golu Kumar Singh</strong></div>
+    <div class="footer-members">
+      <div class="footer-member"><b>1.</b> Rajveer Singh</div>
+      <div class="footer-member"><b>2.</b> Harshit Sharma</div>
+      <div class="footer-member"><b>3.</b> Ankit Kumar</div>
+      <div class="footer-member"><b>4.</b> Himanshi</div>
+      <div class="footer-member"><b>5.</b> Vaibhav Sharma</div>
+    </div>
+  </div>
+  <div class="footer-col" style="border-left:1px solid var(--border);padding-left:16px">
+    <div class="footer-head" style="color:var(--accent)">Smart India Hackathon 2026</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:5px 0">
+      <div class="footer-info"><label>Problem Statement</label><value style="color:var(--accent)">SIH 26127</value></div>
+      <div class="footer-info"><label>Team ID</label><value style="color:#fff">143412</value></div>
+    </div>
+    <div class="footer-email"><a href="mailto:golusingh94712@gmail.com">&#9993; golusingh94712@gmail.com</a></div>
+  </div>
+</div>
+
+<!-- CAMERA MODAL -->
+<div class="modal-bg" id="cam-modal">
+  <div class="modal" style="width:85vw;max-width:1100px;height:82vh">
+    <div class="modal-hdr">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="cm-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+        <span style="font-size:14px;font-weight:800" id="cm-title">CAM-01</span>
+        <span id="cm-sub" style="font-size:11px;color:var(--muted2)">Rajpura Junction</span>
+        <span style="font-size:9px;padding:2px 8px;border-radius:3px;background:rgba(6,78,59,.5);color:var(--green);border:1px solid rgba(5,150,105,.5);font-weight:700">LIVE</span>
       </div>
-      <div class="demo-stepper" id="demo-stepper">
-        <!-- 10 steps generated by JS -->
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="toggleNVModal()" id="modal-nv-btn">&#127769; NIGHT VISION</button>
+        <button class="btn btn-accent" onclick="closeModal();navTo('journey');runReconstruct()" style="font-size:10px">&#9889; RECONSTRUCT JOURNEY</button>
+        <button class="btn btn-red" onclick="closeModal()">&#10005; CLOSE</button>
       </div>
-      <div class="layout-2col p-4" style="flex:1; padding:1rem;">
-        <div class="cam-grid" style="gap:1rem;">
-          <div class="cam-container" style="border-color:var(--border);" id="dc-1"><canvas id="cvs-d1"></canvas><div class="cam-overlay"><span class="cam-label">CAM-01</span></div></div>
-          <div class="cam-container" style="border-color:var(--border);" id="dc-2"><canvas id="cvs-d2"></canvas><div class="cam-overlay"><span class="cam-label">CAM-02</span></div></div>
-          <div class="cam-container" style="border-color:var(--border);" id="dc-3"><canvas id="cvs-d3"></canvas><div class="cam-overlay"><span class="cam-label">CAM-03</span></div></div>
-          <div class="cam-container" style="border-color:var(--border);" id="dc-4"><canvas id="cvs-d4"></canvas><div class="cam-overlay"><span class="cam-label">CAM-04</span></div></div>
+    </div>
+    <div class="modal-body">
+      <div style="flex:3;position:relative;background:#000;min-width:0">
+        <canvas id="modal-canvas" style="width:100%;height:100%;display:block"></canvas>
+        <div style="position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.3) 50%);background-size:100% 4px;pointer-events:none"></div>
+        <div style="position:absolute;top:8px;left:10px;font-size:10px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.7);padding:3px 8px;border-radius:3px;border:1px solid rgba(255,255,255,.12)">REC &#8226; <span id="modal-ts">--:--:--</span></div>
+        <div id="modal-ai-lbl" style="position:absolute;bottom:8px;left:10px;font-size:10px;font-weight:700;color:var(--green);background:rgba(0,0,0,.8);padding:3px 8px;border-radius:3px;border:1px solid rgba(16,185,129,.3)">AI DETECTION ACTIVE</div>
+      </div>
+      <div style="flex:2;overflow-y:auto;display:flex;flex-direction:column;border-left:1px solid var(--border)">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px">Node Specifications</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="cm-specs"></div>
         </div>
-        <div class="panel" style="padding:0; position:relative;">
-          <div class="map-container" id="demo-map-container"></div>
-          <div class="demo-scene-text">
-            <h2 class="text-xl font-bold text-accent mb-2" id="demo-title" style="margin-bottom:0.5rem;">ALL SURVEILLANCE & AI SYSTEMS ONLINE</h2>
-            <p class="text-lg text-main" id="demo-subtitle">12 Edge Nodes Synchronized</p>
-          </div>
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px">Live Detections</div>
+          <table class="vtable" style="font-size:10px"><thead><tr><th>ID</th><th>Type</th><th>Conf</th><th>Plate</th><th>Speed</th></tr></thead><tbody id="cm-det-body"></tbody></table>
+        </div>
+        <div style="padding:12px 14px">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px">AI Pipeline Status</div>
+          <div id="cm-ai-bars"></div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // --- STATE & UTILS ---
-    let currentPage = 'cmd';
-    
-    // Live Clock
-    function updateClock() {
-      const d = new Date();
-      const t = d.toLocaleTimeString('en-IN', {hour12:false, timeZone:'Asia/Kolkata'});
-      const el = document.getElementById('clock');
-      if(el) el.textContent = t;
+<script>
+// ======================= DATA =======================
+const CAMERAS = [
+  {id:'CAM-01',name:'Rajpura Junction',loc:'Sector 3 Intersection',road:'NH-44 Northbound',fps:29.4,vcount:23,alert:false,
+   dets:[{id:'V-1027',type:'SEDAN',conf:.96,plate:'PB10XX1234',speed:42,hero:true},{id:'V-3109',type:'SEDAN',conf:.95,plate:'DL01AB9921',speed:35},{id:'V-4890',type:'BUS',conf:.96,plate:'CH01TC5512',speed:28}]},
+  {id:'CAM-02',name:'GT Road Flyover',loc:'Central Arterial Overpass',road:'GT Expressway Mile 14',fps:28.8,vcount:31,alert:false,
+   dets:[{id:'V-1027',type:'SEDAN',conf:.94,plate:'PB10XX1234',speed:46,hero:true},{id:'V-3109',type:'SEDAN',conf:.95,plate:'DL01AB9921',speed:38}]},
+  {id:'CAM-03',name:'Industrial Tollway',loc:'West Cargo Checkpoint',road:'Freight Corridor Bypass',fps:29.1,vcount:19,alert:true,
+   dets:[{id:'V-2041',type:'SUV',conf:.91,plate:'HR26DK8899',speed:54,watchlist:true}]},
+  {id:'CAM-04',name:'Metro Terminal Interchange',loc:'Transit Hub Plaza',road:'Outer Ring Boulevard',fps:29.7,vcount:42,alert:false,
+   dets:[{id:'V-1027',type:'SEDAN',conf:.95,plate:'PB10XX1234',speed:39,hero:true},{id:'V-6602',type:'TRUCK',conf:.88,plate:'UP32CD1122',speed:30}]},
+];
+const VEHICLES = [
+  {id:'V-1027',plate:'PB10XX1234',type:'SEDAN',color:'WHITE',cam:'CAM-04',cams:3,speed:42,reid:94.2,status:'NORMAL',dist:3.8,first:'13:42:21',last:'13:46:58',
+   journey:[
+     {cam:'CAM-01',name:'Rajpura Junction',ts:'13:42:21',conf:.96,speed:38,plate:'PB10XX1234'},
+     {cam:'CAM-02',name:'GT Road Flyover',ts:'13:42:48',conf:.94,speed:46,transit:27,plate:'PB10XX1234',mb:{PLATE:96,TYPE:99,COLOR:94,VISUAL:91,TEMPORAL:95,SPATIAL:93}},
+     {cam:'CAM-04',name:'Metro Terminal',ts:'13:44:15',conf:.95,speed:41,transit:87,plate:'PB10XX1234',mb:{PLATE:95,TYPE:98,COLOR:93,VISUAL:89,TEMPORAL:92,SPATIAL:91}},
+   ]},
+  {id:'V-2041',plate:'HR26DK8899',type:'SUV',color:'BLACK',cam:'CAM-03',cams:2,speed:54,reid:91.0,status:'WATCHLIST',dist:2.1,first:'13:40:10',last:'13:47:12',
+   journey:[{cam:'CAM-05',name:'Sector 14 Ring Road',ts:'13:40:10',conf:.89,speed:52,plate:'HR26DK8899'},{cam:'CAM-03',name:'Industrial Tollway',ts:'13:47:12',conf:.91,speed:54,transit:422,plate:'HR26DK8899'}]},
+  {id:'V-3109',plate:'DL01AB9921',type:'SEDAN',color:'SILVER',cam:'CAM-02',cams:2,speed:37,reid:95.8,status:'NORMAL',dist:2.9,first:'13:38:05',last:'13:45:01',
+   journey:[{cam:'CAM-01',name:'Rajpura Junction',ts:'13:38:05',conf:.95,speed:35,plate:'DL01AB9921'},{cam:'CAM-02',name:'GT Road Flyover',ts:'13:45:01',conf:.96,speed:38,transit:416,plate:'DL01AB9921'}]},
+  {id:'V-4890',plate:'CH01TC5512',type:'BUS',color:'YELLOW',cam:'CAM-02',cams:3,speed:28,reid:97.1,status:'NORMAL',dist:5.2,first:'13:30:15',last:'13:43:20',journey:[]},
+  {id:'V-5120',plate:'UP16BZ7733',type:'TRUCK',color:'BLUE',cam:'CAM-06',cams:2,speed:32,reid:93.4,status:'NORMAL',dist:4.6,first:'13:25:00',last:'13:46:10',journey:[]},
+];
+const ALERTS_DATA=[
+  {id:'ALT-101',type:'PRIORITY WATCHLIST TARGET',cam:'CAM-03',ts:'13:47:12',conf:.91,sev:'CRITICAL',msg:'Vehicle V-2041 (HR26DK8899) on Municipal Stolen/Suspicious Watchlist detected at West Cargo Checkpoint.',action:'Dispatch Intercept Unit to Exit Gate 4'},
+  {id:'ALT-102',type:'CROSS-CAMERA VELOCITY ANOMALY',cam:'CAM-02',ts:'13:42:48',conf:.94,sev:'HIGH',msg:'Transit between CAM-01 and CAM-02 completed in 27 seconds, exceeding the 60 km/h velocity bound for this corridor segment.',action:'Log Speed Violation Citation -- V-1027'},
+  {id:'ALT-103',type:'UNPLATED VEHICLE',cam:'CAM-04',ts:'13:41:05',conf:.88,sev:'HIGH',msg:'Commercial heavy vehicle entered Bus Transit Corridor without valid plate recognition match.',action:'Automated Lane Gate Lockout'},
+  {id:'ALT-104',type:'CONGESTION THRESHOLD EXCEEDED',cam:'CAM-04',ts:'13:43:50',conf:.97,sev:'MEDIUM',msg:'Corridor vehicle density surpassed 85 vehicles/minute at Metro Terminal Interchange.',action:'Adjust Signal Cycle to 90s Green Phase'},
+  {id:'ALT-105',type:'EDGE VISION PIPELINE RE-INDEX',cam:'SYSTEM',ts:'13:30:00',conf:1.0,sev:'INFO',msg:'Vehicle appearance feature index updated with 12,400 new embeddings across 12 edge nodes.',action:'None -- informational'},
+];
+const EVENTS=[
+  {t:'13:44:15',badge:'MATCH',color:'#f97316',msg:'CROSS-CAMERA: V-1027 confirmed at CAM-04 Metro Terminal (93.8% conf, 87s transit)'},
+  {t:'13:44:02',badge:'ALERT',color:'#ef4444',msg:'CRITICAL: V-2041 HR26DK8899 flagged at CAM-03 Industrial Tollway -- WATCHLIST HIT'},
+  {t:'13:43:13',badge:'TRAJ',color:'#06b6d4',msg:'Trajectory corridor confirmed: V-1027 along GT Expressway NH-44 (3.8 km est.)'},
+  {t:'13:42:48',badge:'MATCH',color:'#f97316',msg:'CROSS-CAMERA: V-1027 matched CAM-01 to CAM-02 in 27s (94.2% conf)'},
+  {t:'13:42:24',badge:'ANPR',color:'#8b5cf6',msg:'ANPR: PB10XX1234 verified at CAM-01 Rajpura Junction (94% confidence)'},
+  {t:'13:42:21',badge:'DETECT',color:'#10b981',msg:'DETECTION: V-1027 SEDAN WHITE entering northbound lane at CAM-01 (96% conf)'},
+  {t:'13:38:05',badge:'DETECT',color:'#10b981',msg:'DETECTION: V-3109 SEDAN SILVER at CAM-01 (95% conf)'},
+];
+
+// ======================= CANVAS ROAD SCENE =======================
+const VEH_DEFS={
+  'V-1027':{color:'#f8fafc',w:18,l:38,label:'PB10XX1234',conf:'96%',hero:true},
+  'V-2041':{color:'#1e293b',w:22,l:44,label:'HR26DK8899',conf:'91%',watchlist:true},
+  'V-3109':{color:'#94a3b8',w:20,l:42,label:'DL01AB9921',conf:'95%'},
+  'V-4890':{color:'#eab308',w:26,l:70,label:'CH01TC5512',conf:'92%'},
+  'V-5120':{color:'#3b82f6',w:24,l:62,label:'UP16BZ7733',conf:'90%'},
+  'V-6602':{color:'#78716c',w:24,l:60,label:'UP32CD1122',conf:'88%'},
+};
+const CAM_VEHS={
+  'CAM-01':[{id:'V-1027',lane:0,pos:.8,spd:-.002},{id:'V-3109',lane:2,pos:.3,spd:.003},{id:'V-4890',lane:1,pos:.5,spd:-.0015}],
+  'CAM-02':[{id:'V-1027',lane:1,pos:.4,spd:-.0025},{id:'V-3109',lane:3,pos:.6,spd:.002}],
+  'CAM-03':[{id:'V-2041',lane:2,pos:.5,spd:.003}],
+  'CAM-04':[{id:'V-1027',lane:0,pos:.2,spd:-.002},{id:'V-6602',lane:1,pos:.7,spd:-.0018}],
+};
+
+let nightVision=false;
+let allScenes=[];
+
+class RoadScene{
+  constructor(canvas,camId){
+    this.canvas=canvas; this.camId=camId;
+    this.ctx=canvas.getContext('2d');
+    this.vehs=(CAM_VEHS[camId]||[]).map(v=>({...v}));
+    this.active=true;
+    this.resize();
+  }
+  resize(){
+    const p=this.canvas.parentElement;
+    const r=p.getBoundingClientRect();
+    this.canvas.width=r.width>20?Math.floor(r.width):400;
+    this.canvas.height=r.height>20?Math.floor(r.height):240;
+  }
+  draw(){
+    if(!this.active)return;
+    const{canvas,ctx}=this;
+    const W=canvas.width,H=canvas.height;
+    if(W<10||H<10)return;
+    const hy=H*.22,rT=W*.22,rB=W*.92;
+    const sky=ctx.createLinearGradient(0,0,0,hy);
+    sky.addColorStop(0,'#0a1628');sky.addColorStop(1,'#1e293b');
+    ctx.fillStyle=sky;ctx.fillRect(0,0,W,hy);
+    ctx.fillStyle='#1e293b';ctx.fillRect(0,hy,W,H-hy);
+    ctx.fillStyle='#111827';ctx.beginPath();
+    ctx.moveTo(W/2-rT/2,hy);ctx.lineTo(W/2+rT/2,hy);ctx.lineTo(W/2+rB/2,H);ctx.lineTo(W/2-rB/2,H);ctx.fill();
+    for(let i=1;i<4;i++){
+      const lp=i/4,tx=W/2-rT/2+rT*lp,bx=W/2-rB/2+rB*lp;
+      ctx.beginPath();ctx.moveTo(tx,hy);ctx.lineTo(bx,H);
+      if(i===2){ctx.strokeStyle='rgba(249,115,22,.5)';ctx.lineWidth=2;ctx.setLineDash([]);}
+      else{ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.5;ctx.setLineDash([14,14]);}
+      ctx.stroke();
     }
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    
-    // Navigation
-    document.querySelectorAll('.nav-item').forEach(el => {
-      el.addEventListener('click', () => {
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-        const pageId = el.getAttribute('data-page');
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        currentPage = pageId;
-
-        // Re-resize all scenes now the page is visible so hidden canvases get real dimensions
-        requestAnimationFrame(() => {
-          if(typeof scenes !== 'undefined') {
-            scenes.forEach(s => { if(s && s.canvas) s.resize(); });
-          }
-        });
-      });
+    ctx.setLineDash([]);
+    this.vehs.forEach(v=>{
+      v.pos+=v.spd;
+      if(v.pos>1.2)v.pos=-0.2;
+      if(v.pos<-0.2)v.pos=1.2;
+      if(v.pos<0||v.pos>1)return;
+      const sc=0.15+v.pos*.85,vY=hy+v.pos*(H-hy);
+      const lp=(v.lane+.5)/4,tx=W/2-rT/2+rT*lp,bx=W/2-rB/2+rB*lp,vX=tx+v.pos*(bx-tx);
+      const def=VEH_DEFS[v.id];if(!def)return;
+      const vw=def.w*sc,vl=def.l*sc;
+      ctx.fillStyle=def.color;ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(vX-vw/2,vY-vl,vw,vl,3*sc);else ctx.rect(vX-vw/2,vY-vl,vw,vl);
+      ctx.fill();
+      ctx.fillStyle=def.watchlist?'rgba(239,68,68,.5)':'rgba(0,0,0,.7)';
+      ctx.fillRect(vX-vw*.38,vY-vl*.82,vw*.76,vl*.22);
+      const coming=v.lane>=2;
+      ctx.fillStyle=coming?'#dbeafe':'#f87171';
+      ctx.fillRect(vX-vw*.42,vY-(coming?3:vl-3),vw*.18,2.5*sc);
+      ctx.fillRect(vX+vw*.22,vY-(coming?3:vl-3),vw*.18,2.5*sc);
+      if(def.hero||def.watchlist){
+        const bc=def.watchlist?'#ef4444':'#f97316';
+        ctx.strokeStyle=bc;ctx.lineWidth=2;ctx.strokeRect(vX-vw/2-3,vY-vl-3,vw+6,vl+6);
+        ctx.fillStyle=bc+'cc';ctx.fillRect(vX-vw/2-2,vY-vl-18,116,14);
+        ctx.fillStyle='#fff';ctx.font='bold 9px monospace';
+        ctx.fillText(v.id+' | '+def.label+' '+def.conf,vX-vw/2+2,vY-vl-7);
+      }
     });
-
-    // Night vision toggle (green tint overlay on canvas)
-    let nightVisionOn = false;
-    function toggleNightVision() {
-      nightVisionOn = !nightVisionOn;
-      const btn = document.getElementById('nvbtn');
-      if(btn) btn.textContent = nightVisionOn ? '☀ NIGHT VISION ON' : '🌙 NIGHT VISION';
-      if(btn) btn.style.borderColor = nightVisionOn ? '#10b981' : '#1e2c45';
-      if(btn) btn.style.color = nightVisionOn ? '#10b981' : '#cbd5e1';
-      // Store flag so draw() can apply green filter
-      window._nvMode = nightVisionOn;
+    if(nightVision){
+      ctx.fillStyle='rgba(0,200,80,.07)';ctx.fillRect(0,0,W,H);
+      ctx.globalCompositeOperation='saturation';ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+      ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(0,220,70,.09)';ctx.fillRect(0,0,W,H);
     }
+  }
+}
 
-    function toggleFullScreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-        });
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
-      }
-    }
+// ======================= SVG MAP =======================
+const MAP_NODES={
+  'CAM-01':{x:110,y:310,sub:'Rajpura Jct',alert:false},
+  'CAM-02':{x:270,y:210,sub:'GT Flyover',alert:false},
+  'CAM-03':{x:75,y:410,sub:'Ind Tollway',alert:true},
+  'CAM-04':{x:400,y:135,sub:'Metro Tml',alert:false},
+  'CAM-05':{x:195,y:355,sub:'Sec 14 Ring',alert:false},
+  'CAM-06':{x:475,y:90,sub:'North Freight',alert:false},
+};
 
-    // Modal Logic
-    function openCam(id) {
-      document.getElementById('cam-modal').classList.add('active');
-      const titles = ["CAM-01 | RAJPURA JCT", "CAM-02 | GT FLYOVER", "CAM-03 | IND TOLLWAY [ALERT]", "CAM-04 | METRO TML"];
-      document.getElementById('cm-title').textContent = titles[id-1];
-      activeModalCam = id;
-    }
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
-      activeModalCam = 0;
-    }
+function buildSVGMap(id,opts={}){
+  const{showRoute=false,routeStage=0,markerPos=null,interactive=false}=opts;
+  const w=580,h=480;
+  let s=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%">
+    <defs><pattern id="gp${id}" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/></pattern>
+    <marker id="arr${id}" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#f97316"/></marker></defs>
+    <rect width="${w}" height="${h}" fill="url(#gp${id})" rx="4"/>
+    <path d="M 110 310 L 270 210 L 400 135" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+    <path d="M 75 410 L 195 355 L 270 210" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+    <path d="M 400 135 L 475 90" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>`;
+  if(showRoute&&routeStage>=1){
+    const segs=['M 110 310 L 270 210','M 270 210 L 400 135'].slice(0,routeStage);
+    segs.forEach(p=>s+=`<path d="${p}" fill="none" stroke="#f97316" stroke-width="3.5" marker-end="url(#arr${id})"/>`);
+  }
+  Object.entries(MAP_NODES).forEach(([k,n])=>{
+    const c=n.alert?'#ef4444':'#10b981';
+    const oc=interactive?`onclick="showCamPopup('${k}',${n.x},${n.y})" style="cursor:pointer"`:'';
+    s+=`<circle cx="${n.x}" cy="${n.y}" r="20" fill="rgba(0,0,0,.5)" stroke="${c}" stroke-width="1.5" opacity=".35" ${oc}/>
+      <circle cx="${n.x}" cy="${n.y}" r="7" fill="${c}" ${oc}/>
+      <text x="${n.x+14}" y="${n.y-8}" fill="#e2e8f0" font-size="11" font-family="monospace" font-weight="700">${k}</text>
+      <text x="${n.x+14}" y="${n.y+6}" fill="#64748b" font-size="9" font-family="monospace">${n.sub}</text>`;
+  });
+  if(markerPos)s+=`<circle cx="${markerPos.x}" cy="${markerPos.y}" r="8" fill="#f97316" stroke="#fff" stroke-width="2"/>
+    <circle cx="${markerPos.x}" cy="${markerPos.y}" r="18" fill="none" stroke="#f97316" stroke-width="1.5" opacity=".4"/>`;
+  s+='</svg>';
+  const el=document.getElementById(id);if(el)el.innerHTML=s;
+}
 
-    // Vehicle Table Logic
-    function selectVeh(id) {
-      const rows = document.querySelectorAll('#veh-table tbody tr');
-      rows.forEach(r => r.classList.remove('tr-active'));
-      const activeRow = Array.from(rows).find(r => r.cells[0].textContent.includes(id));
-      if(activeRow) {
-        activeRow.classList.add('tr-active');
-        document.getElementById('vp-id').textContent = id;
-        document.getElementById('vp-plate').textContent = activeRow.cells[1].textContent;
-        document.getElementById('vp-class').textContent = activeRow.cells[2].textContent;
-        document.getElementById('vp-node').textContent = activeRow.cells[3].textContent;
-        document.getElementById('vp-status').textContent = activeRow.cells[6].textContent;
-        document.getElementById('vp-status').className = 'font-bold ' + (activeRow.cells[6].textContent === 'NORMAL' ? 'text-green' : 'text-red');
-      }
-    }
-    
-    document.getElementById('veh-search').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase();
-      const rows = document.querySelectorAll('#veh-table tbody tr');
-      rows.forEach(r => {
-        const text = r.textContent.toLowerCase();
-        r.style.display = text.includes(term) ? '' : 'none';
-      });
-    });
+// ======================= RECONSTRUCT =======================
+let reconStage=0,reconTm=null;
+const STMK=[{x:110,y:310},{x:110,y:310},{x:270,y:210},{x:400,y:135}];
 
-    // --- CANVAS RENDERING (PERSPECTIVE ROAD) ---
-    // Vehicle definitions
-    const vehDefs = {
-      'V-1027': { color: '#ffffff', w: 20, l: 40, type: 'sedan', label: 'PB10XX1234', conf: '94%', alert: false },
-      'V-3109': { color: '#94a3b8', w: 22, l: 45, type: 'suv', label: 'DL01AB9921', conf: '96%', alert: false },
-      'V-4890': { color: '#eab308', w: 26, l: 70, type: 'bus', label: 'CH01TC5512', conf: '92%', alert: false },
-      'V-5120': { color: '#f97316', w: 24, l: 65, type: 'truck', label: 'UP16BZ7733', conf: '90%', alert: false },
-      'V-2041': { color: '#0f172a', w: 22, l: 45, type: 'suv', label: 'HR26DK8899', conf: '91%', alert: true }
-    };
+function setStatus(msg,color='#94a3b8'){const el=document.getElementById('cmd-map-status');if(el){el.textContent=msg;el.style.color=color;}}
 
-    class RoadScene {
-      constructor(canvasId, camId) {
-        this.canvas = document.getElementById(canvasId);
-        if(!this.canvas) return;
-        this.ctx = this.canvas.getContext('2d');
-        this.camId = camId;
-        this.vehicles = [];
-        this.initVehicles();
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-      }
-      resize() {
-        if(!this.canvas) return;
-        const rect = this.canvas.parentElement.getBoundingClientRect();
-        // Fall back to 480×270 if the parent is hidden (zero dimensions)
-        this.canvas.width  = rect.width  > 10 ? rect.width  : 480;
-        this.canvas.height = rect.height > 10 ? rect.height : 270;
-      }
-      initVehicles() {
-        if(this.camId === 1) {
-          this.addVeh('V-1027', 0, 0.8, -0.002); // Hero
-          this.addVeh('V-3109', 2, 0.2, 0.003);
-          this.addVeh('V-4890', 3, 0.5, 0.0015);
-          this.addVeh('V-5120', 1, 0.1, -0.0025);
-        } else if(this.camId === 2) {
-          this.addVeh('V-1027', 1, 0.4, -0.0025);
-          this.addVeh('V-3109', 3, 0.6, 0.002);
-        } else if(this.camId === 3) {
-          this.addVeh('V-2041', 2, 0.5, 0.003); // Alert
-        } else if(this.camId === 4) {
-          this.addVeh('V-1027', 0, 0.2, -0.002);
-        }
-      }
-      addVeh(id, lane, pos, spd) {
-        this.vehicles.push({ id, lane, pos, spd });
-      }
-      draw() {
-        if(!this.canvas || !this.ctx) return;
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        const ctx = this.ctx;
-        
-        // Background
-        ctx.fillStyle = '#1e293b'; // Road color
-        ctx.fillRect(0, 0, w, h);
-        
-        // Perspective Road Polygon
-        const horizonY = h * 0.2;
-        const roadWTop = w * 0.2;
-        const roadWBot = w * 0.9;
-        
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.moveTo(w/2 - roadWTop/2, horizonY);
-        ctx.lineTo(w/2 + roadWTop/2, horizonY);
-        ctx.lineTo(w/2 + roadWBot/2, h);
-        ctx.lineTo(w/2 - roadWBot/2, h);
-        ctx.fill();
+function runReconstruct(){
+  clearTimeout(reconTm);reconStage=0;
+  const m=document.getElementById('journey-map-wrap');
+  const isJP=document.getElementById('page-journey').classList.contains('active');
+  buildSVGMap('cmd-map-wrap',{});
+  if(m)buildSVGMap('journey-map-wrap',{});
+  setStatus('ANALYZING VEHICLE HISTORY...','#f97316');
+  const btn=document.getElementById('reconstruct-btn');if(btn){btn.disabled=true;btn.style.opacity='.6';}
+  reconTm=setTimeout(()=>{
+    reconStage=1;
+    buildSVGMap('cmd-map-wrap',{markerPos:STMK[1]});
+    if(m&&isJP)buildSVGMap('journey-map-wrap',{markerPos:STMK[1]});
+    setStatus('LOCATED INITIAL NODE: CAM-01 -- Rajpura Junction','#10b981');
+    addEv('LOCATE','CAM-01 initial node identified for V-1027','#10b981');
+    reconTm=setTimeout(()=>{
+      reconStage=2;
+      buildSVGMap('cmd-map-wrap',{showRoute:true,routeStage:1,markerPos:STMK[2]});
+      if(m&&isJP)buildSVGMap('journey-map-wrap',{showRoute:true,routeStage:1,markerPos:STMK[2]});
+      setStatus('CAM-01 to CAM-02 MATCHED -- 94.2% confidence in 27s','#f97316');
+      addEv('MATCH','CAM-01 to CAM-02 transition matched (94.2% conf, 27s transit)','#f97316');
+      reconTm=setTimeout(()=>{
+        reconStage=3;
+        buildSVGMap('cmd-map-wrap',{showRoute:true,routeStage:2,markerPos:STMK[3]});
+        if(m&&isJP)buildSVGMap('journey-map-wrap',{showRoute:true,routeStage:2,markerPos:STMK[3]});
+        setStatus('JOURNEY RECONSTRUCTED: V-1027 | 3.8 KM | 04:37 | 94.2% RE-ID','#10b981');
+        addEv('MATCH','CAM-02 to CAM-04 confirmed (93.8%) -- ROUTE COMPLETE','#10b981');
+        if(btn){btn.disabled=false;btn.style.opacity='1';}
+      },1400);
+    },1300);
+  },1000);
+}
+function resetReconstruct(){
+  clearTimeout(reconTm);reconStage=0;
+  buildSVGMap('cmd-map-wrap',{});buildSVGMap('journey-map-wrap',{});
+  setStatus('Click RECONSTRUCT to begin multi-camera trajectory synthesis');
+  const btn=document.getElementById('reconstruct-btn');if(btn){btn.disabled=false;btn.style.opacity='1';}
+}
 
-        // Lane markings
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([15, 15]);
-        
-        for(let i=1; i<4; i++) {
-          if(i===2) { ctx.strokeStyle = 'rgba(249,115,22,0.5)'; ctx.setLineDash([]); } // Double center line
-          else { ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.setLineDash([15, 15]); }
-          
-          let pct = i / 4;
-          let tx = w/2 - roadWTop/2 + roadWTop * pct;
-          let bx = w/2 - roadWBot/2 + roadWBot * pct;
-          
-          ctx.beginPath();
-          ctx.moveTo(tx, horizonY);
-          ctx.lineTo(bx, h);
-          ctx.stroke();
-        }
-        ctx.setLineDash([]);
-
-        // Vehicles
-        this.vehicles.forEach(v => {
-          v.pos += v.spd;
-          if(v.pos > 1.2) v.pos = -0.2;
-          if(v.pos < -0.2) v.pos = 1.2;
-          
-          // Only draw if within visible range mostly
-          if(v.pos >= 0 && v.pos <= 1) {
-            let scale = 0.2 + v.pos * 0.8; // Perspective scale
-            let vY = horizonY + v.pos * (h - horizonY);
-            
-            let lanePct = (v.lane + 0.5) / 4;
-            let tx = w/2 - roadWTop/2 + roadWTop * lanePct;
-            let bx = w/2 - roadWBot/2 + roadWBot * lanePct;
-            let vX = tx + v.pos * (bx - tx);
-            
-            let def = vehDefs[v.id];
-            let vw = def.w * scale;
-            let vl = def.l * scale;
-            
-            // Draw vehicle body
-            ctx.fillStyle = def.color;
-            ctx.beginPath();
-            ctx.roundRect(vX - vw/2, vY - vl, vw, vl, 4*scale);
-            ctx.fill();
-            
-            // Windshield
-            ctx.fillStyle = '#000';
-            ctx.fillRect(vX - vw*0.4, vY - vl*0.8, vw*0.8, vl*0.2);
-            
-            // Head/Tail lights
-            let isComing = (v.lane >= 2);
-            ctx.fillStyle = isComing ? '#fff' : '#f00';
-            ctx.fillRect(vX - vw*0.4, vY - (isComing ? 2 : vl-2), vw*0.2, 2*scale);
-            ctx.fillRect(vX + vw*0.2, vY - (isComing ? 2 : vl-2), vw*0.2, 2*scale);
-
-            // Bounding box for Hero or Alert
-            if(v.id === 'V-1027' || def.alert) {
-              ctx.strokeStyle = def.alert ? '#ef4444' : '#f97316';
-              ctx.lineWidth = 2;
-              ctx.strokeRect(vX - vw/2 - 2, vY - vl - 2, vw + 4, vl + 4);
-              
-              // Label
-              ctx.fillStyle = def.alert ? '#ef4444' : '#f97316';
-              let textY = vY - vl - 6;
-              ctx.fillRect(vX - vw/2 - 2, textY - 14, 120, 14);
-              ctx.fillStyle = '#fff';
-              ctx.font = '10px monospace';
-              ctx.fillText(`${v.id} | ${def.label} ${def.conf}`, vX - vw/2 + 2, textY - 4);
-            }
-          }
-        });
-
-        // Night Vision tint overlay
-        if(window._nvMode) {
-          ctx.fillStyle = 'rgba(0,255,80,0.10)';
-          ctx.fillRect(0, 0, w, h);
-          ctx.globalCompositeOperation = 'saturation';
-          ctx.fillStyle = 'rgba(0,0,0,1)';
-          ctx.fillRect(0, 0, w, h);
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = 'rgba(0,255,80,0.08)';
-          ctx.fillRect(0, 0, w, h);
-        }
-      }
-    }
-
-    let scenes = [];
-    let activeModalCam = 0;
-    
-    function initCanvases() {
-      // CMD Page
-      scenes.push(new RoadScene('cvs-c1', 1));
-      scenes.push(new RoadScene('cvs-c2', 2));
-      scenes.push(new RoadScene('cvs-c3', 3));
-      scenes.push(new RoadScene('cvs-c4', 4));
-      // LIVE Page
-      scenes.push(new RoadScene('cvs-l1', 1));
-      scenes.push(new RoadScene('cvs-l2', 2));
-      scenes.push(new RoadScene('cvs-l3', 3));
-      scenes.push(new RoadScene('cvs-l4', 4));
-      // DEMO Page
-      scenes.push(new RoadScene('cvs-d1', 1));
-      scenes.push(new RoadScene('cvs-d2', 2));
-      scenes.push(new RoadScene('cvs-d3', 3));
-      scenes.push(new RoadScene('cvs-d4', 4));
-      
-      // Modal Scene
-      const modalScene = new RoadScene('cvs-modal', 1);
-      
-      function renderLoop() {
-        scenes.forEach(s => {
-          // Only draw if canvas has size (visible)
-          if(s.canvas && s.canvas.width > 0) s.draw();
-        });
-        
-        if(activeModalCam > 0) {
-          modalScene.camId = activeModalCam;
-          modalScene.resize();
-          modalScene.initVehicles(); // hack to reset for demo, but better to sync
-          modalScene.draw();
-        }
-        
-        requestAnimationFrame(renderLoop);
-      }
-      renderLoop();
-    }
-
-    // --- SVG MAP GENERATION & ANIMATION ---
-    const mapNodes = {
-      1: {x: 120, y: 320, name: 'CAM-01', pulse: true},
-      2: {x: 280, y: 220, name: 'CAM-02', pulse: true},
-      3: {x: 80, y: 420, name: 'CAM-03', pulse: false},
-      4: {x: 400, y: 140, name: 'CAM-04', pulse: true},
-      5: {x: 200, y: 360, name: 'CAM-05', pulse: false},
-      6: {x: 480, y: 100, name: 'CAM-06', pulse: false},
-    };
-
-    function generateSVGMap(id, width, height) {
-      const isFull = (id === 'full-map-container');
-      const w = 600; const h = 500;
-      let svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-          </pattern>
-        </defs>
-        <rect width="${w}" height="${h}" fill="url(#grid)" />
-        
-        <!-- Roads Base -->
-        <path d="M 120 320 L 280 220 L 400 140" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6" />
-        <path d="M 80 420 L 200 360 L 280 220" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6" />
-        <path d="M 400 140 L 480 100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6" />
-        
-        <!-- Reconstructed Path (Hidden initially) -->
-        <path id="route-path-${id}" class="route-path" d="M 120 320 L 280 220 L 400 140" fill="none" stroke="var(--accent)" stroke-width="4" opacity="0" />
-      `;
-      
-      // Nodes
-      for(let key in mapNodes) {
-        let n = mapNodes[key];
-        let color = n.name === 'CAM-03' ? 'var(--red)' : 'var(--green)';
-        if(isFull || n.pulse) {
-          svg += `
-            <circle cx="${n.x}" cy="${n.y}" r="6" fill="${color}" />
-            <circle cx="${n.x}" cy="${n.y}" r="16" fill="none" stroke="${color}" stroke-width="2" class="node-pulse" />
-            <text x="${n.x+15}" y="${n.y+5}" fill="var(--text-main)" font-size="12" font-family="monospace">${n.name}</text>
-          `;
-        }
-      }
-      
-      // Vehicle Marker (Hidden)
-      svg += `<circle id="veh-marker-${id}" cx="120" cy="320" r="8" fill="var(--accent)" opacity="0" />`;
-      
-      svg += `</svg>`;
-      document.getElementById(id).innerHTML = svg;
-    }
-
-    // --- RECONSTRUCTION LOGIC ---
-    let liveEvents = [
-      "evt-05 13:44:02 ALERT V-2041 HR26DK8899 CAM-03 CRITICAL WATCHLIST",
-      "evt-04 13:43:13 TRAJECTORY V-1027 3.8 km corridor confirmed",
-      "evt-03 13:42:48 CROSS-CAMERA-MATCH V-1027 CAM-01→CAM-02 94.2% 27s",
-      "evt-02 13:42:24 ANPR V-1027 PB10XX1234 CAM-01 94%",
-      "evt-01 13:42:21 DETECTION V-1027 CAM-01 96% - Vehicle detected at Rajpura Junction"
-    ];
-    
-    function renderLiveEvents() {
-      const el = document.getElementById('cmd-event-list');
-      el.innerHTML = '';
-      liveEvents.forEach(evt => {
-        let isAlert = evt.includes('ALERT');
-        let isMatch = evt.includes('CROSS-CAMERA');
-        let border = isAlert ? 'var(--red)' : (isMatch ? 'var(--accent)' : 'var(--border)');
-        let html = `<div class="event-item" style="border-left-color:${border};">
-          <div style="flex:1;">${evt}</div>
-        </div>`;
-        el.innerHTML += html;
-      });
-    }
-
-    function triggerJourneyReconstruct() {
-      const mapId = currentPage === 'journeys' ? 'journey-map-container' : 'cmd-map-container';
-      
-      // Reset
-      document.getElementById(`route-path-${mapId}`).style.opacity = '0';
-      document.getElementById(`route-path-${mapId}`).style.animation = 'none';
-      document.getElementById(`veh-marker-${mapId}`).style.opacity = '0';
-      
-      if(currentPage === 'journeys') {
-        const tl = document.getElementById('journey-timeline');
-        tl.innerHTML = `<div class="text-accent text-center font-bold p-4">ANALYZING VEHICLE HISTORY...</div>`;
-      }
-      
-      // Stage 1
-      setTimeout(() => {
-        if(currentPage === 'journeys') {
-          document.getElementById('journey-timeline').innerHTML = `
-            <div class="panel" style="border-left:4px solid var(--accent); margin-bottom:1rem;">
-              <div class="font-bold">1. CAM-01 RAJPURA JUNCTION</div>
-              <div class="text-sm text-muted">13:42:21 • 38 km/h • Conf: 96%</div>
-            </div>
-          `;
-        }
-        document.getElementById(`veh-marker-${mapId}`).style.opacity = '1';
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cx', '120');
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cy', '320');
-        
-        liveEvents.unshift("evt-06 " + document.getElementById('clock').textContent.split(' ')[0] + " RECONSTRUCT-START V-1027 INITIATED");
-        renderLiveEvents();
-      }, 1000);
-      
-      // Stage 2
-      setTimeout(() => {
-        document.getElementById(`route-path-${mapId}`).style.opacity = '1';
-        // Hack: draw partial path via CSS or just animate marker
-        document.getElementById(`veh-marker-${mapId}`).style.transition = 'all 1.3s linear';
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cx', '280');
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cy', '220');
-        
-        if(currentPage === 'journeys') {
-          document.getElementById('journey-timeline').innerHTML += `
-            <div class="panel" style="border-left:4px solid var(--accent); margin-bottom:1rem;">
-              <div class="font-bold">2. CAM-02 GT ROAD FLYOVER</div>
-              <div class="text-sm text-muted">13:42:48 • 46 km/h • Conf: 94% (27s transit)</div>
-              <div class="mt-2 text-xs grid" style="grid-template-columns:1fr 1fr;">
-                <div>PLATE: 96%</div><div>TYPE: 99%</div>
-                <div>COLOR: 94%</div><div>VISUAL: 91%</div>
-                <div>SPATIAL: 93%</div><div>TOTAL MATCH: 94%</div>
-              </div>
-            </div>
-          `;
-        }
-      }, 2300);
-      
-      // Stage 3
-      setTimeout(() => {
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cx', '400');
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cy', '140');
-        
-        if(currentPage === 'journeys') {
-          document.getElementById('journey-timeline').innerHTML += `
-            <div class="panel" style="border-left:4px solid var(--accent); margin-bottom:1rem;">
-              <div class="font-bold">3. CAM-04 METRO TERMINAL INTERCHANGE</div>
-              <div class="text-sm text-muted">13:44:15 • 41 km/h • Conf: 95% (87s transit)</div>
-              <div class="mt-2 text-xs grid" style="grid-template-columns:1fr 1fr;">
-                <div>PLATE: 95%</div><div>TYPE: 98%</div>
-                <div>COLOR: 93%</div><div>VISUAL: 89%</div>
-                <div>SPATIAL: 91%</div><div class="text-green font-bold">TOTAL MATCH: 91%</div>
-              </div>
-            </div>
-            <div class="p-2 bg-panel text-center text-green font-bold border border-green rounded mt-4">
-              ROUTE RECONSTRUCTED: 3.8 KM | 04:37 | RE-ID 93.4%
-            </div>
-          `;
-        }
-        liveEvents.unshift("evt-07 " + document.getElementById('clock').textContent.split(' ')[0] + " RECONSTRUCT-COMPLETE V-1027 3.8km MATCHED");
-        renderLiveEvents();
-      }, 3600);
-    }
-
-    // --- DEMO STORY LOGIC ---
-    let demoStep = 0;
-    let demoTimer = null;
-    let demoPaused = false;
-    
-    const storyText = [
-      { t: "ALL SURVEILLANCE & AI SYSTEMS ONLINE", s: "12 Edge Nodes Synchronized" },
-      { t: "VEHICLE V-1027 DETECTED AT ENTRY NODE", s: "CAM-01 Rajpura Junction | Plate: PB10XX1234" },
-      { t: "ANPR PLATE RECOGNITION EXECUTED", s: "94.2% Confidence | PB10XX1234 Verified" },
-      { t: "AI RE-ID EMBEDDINGS COMPUTED", s: "OSNet-AIN 512-dim visual fingerprint captured" },
-      { t: "CROSS-CAMERA CORRELATION INITIATED", s: "Spatial-temporal graph search active" },
-      { t: "CAM-01 → CAM-02 TRANSITION MATCHED", s: "94% confidence in 27 seconds" },
-      { t: "TRAJECTORY PATH SEGMENT CONFIRMED", s: "GT Expressway NH-44 Northbound" },
-      { t: "CAM-02 → CAM-04 TRANSITION MATCHED", s: "91% confidence in 87 seconds" },
-      { t: "COMPLETE JOURNEY RECONSTRUCTED", s: "3.8 KM in 04:37 at 42 km/h average" },
-      { t: "MISSION COMPLETE", s: "ONE VEHICLE. MULTIPLE CAMERAS. ONE CONTINUOUS JOURNEY." }
-    ];
-
-    function startDemoStory() {
-      document.getElementById('demo-modal').classList.add('active');
-      const st = document.getElementById('demo-stepper');
-      st.innerHTML = '';
-      for(let i=0; i<10; i++) st.innerHTML += `<div class="demo-step" id="dstep-${i}"></div>`;
-      
-      demoStep = 0;
-      demoPaused = false;
-      document.getElementById('demo-pause-btn').textContent = '⏸ PAUSE';
-      updateDemoScene();
-      demoTimer = setInterval(nextDemoScene, 3500);
-    }
-    
-    function nextDemoScene() {
-      if(demoPaused) return;
-      demoStep++;
-      if(demoStep >= 10) {
-        clearInterval(demoTimer);
-        return;
-      }
-      updateDemoScene();
-    }
-    
-    function updateDemoScene() {
-      for(let i=0; i<10; i++) {
-        let el = document.getElementById(`dstep-${i}`);
-        if(i < demoStep) { el.className = 'demo-step passed'; }
-        else if(i === demoStep) { el.className = 'demo-step active'; }
-        else { el.className = 'demo-step'; }
-      }
-      
-      document.getElementById('demo-scene-badge').textContent = `SCENE ${demoStep+1} OF 10`;
-      document.getElementById('demo-title').textContent = storyText[demoStep].t;
-      document.getElementById('demo-subtitle').textContent = storyText[demoStep].s;
-      
-      // Map logic for demo
-      const mapId = 'demo-map-container';
-      if(demoStep === 0) {
-        document.getElementById(`route-path-${mapId}`).style.opacity = '0';
-        document.getElementById(`veh-marker-${mapId}`).style.opacity = '0';
-        document.getElementById('dc-1').style.borderColor = 'var(--border)';
-      }
-      if(demoStep === 1) {
-        document.getElementById(`veh-marker-${mapId}`).style.opacity = '1';
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cx', '120');
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cy', '320');
-        document.getElementById('dc-1').style.borderColor = 'var(--accent)';
-      }
-      if(demoStep === 5) {
-        document.getElementById(`route-path-${mapId}`).style.opacity = '1';
-        document.getElementById(`veh-marker-${mapId}`).style.transition = 'all 1s linear';
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cx', '280');
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cy', '220');
-        document.getElementById('dc-1').style.borderColor = 'var(--border)';
-        document.getElementById('dc-2').style.borderColor = 'var(--accent)';
-      }
-      if(demoStep === 7) {
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cx', '400');
-        document.getElementById(`veh-marker-${mapId}`).setAttribute('cy', '140');
-        document.getElementById('dc-2').style.borderColor = 'var(--border)';
-        document.getElementById('dc-4').style.borderColor = 'var(--accent)';
-      }
-    }
-    
-    function toggleDemoPause() {
-      demoPaused = !demoPaused;
-      document.getElementById('demo-pause-btn').textContent = demoPaused ? '▶ RESUME' : '⏸ PAUSE';
-    }
-    
-    function resetDemo() {
-      clearInterval(demoTimer);
-      startDemoStory();
-    }
-    
-    function exitDemo() {
-      clearInterval(demoTimer);
-      document.getElementById('demo-modal').classList.remove('active');
-    }
-
-    // --- ANALYTICS CHARTS (PURE SVG) ---
-    function renderAnalyticsChart() {
-      const container = document.getElementById('chart-volume');
-      if(!container) return;
-      
-      // Data: 08:00->640, 09:00->1180, 10:00->1420, 11:00->980, 12:00->890, 13:00->847, 14:00->920
-      const data = [640, 1180, 1420, 980, 890, 847, 920];
-      const max = 1500;
-      const points = data.map((d, i) => `${i * (100/6)},${100 - (d/max)*100}`).join(' ');
-      
-      const svg = `
-        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; top:0; left:0; padding:10px 10px 30px 30px;">
-          <defs>
-            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.5"/>
-              <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <!-- Grid -->
-          <line x1="0" y1="20" x2="100" y2="20" stroke="var(--border)" stroke-width="0.5" />
-          <line x1="0" y1="40" x2="100" y2="40" stroke="var(--border)" stroke-width="0.5" />
-          <line x1="0" y1="60" x2="100" y2="60" stroke="var(--border)" stroke-width="0.5" />
-          <line x1="0" y1="80" x2="100" y2="80" stroke="var(--border)" stroke-width="0.5" />
-          
-          <!-- Area -->
-          <polygon points="0,100 ${points} 100,100" fill="url(#areaGradient)" />
-          <!-- Line -->
-          <polyline points="${points}" fill="none" stroke="var(--accent)" stroke-width="2" />
-          
-          <!-- Points -->
-          ${data.map((d, i) => `<circle cx="${i * (100/6)}" cy="${100 - (d/max)*100}" r="1.5" fill="var(--bg)" stroke="var(--accent)" stroke-width="0.5" />`).join('')}
-        </svg>
-        
-        <!-- Y Axis Labels -->
-        <div style="position:absolute; left:0; top:10px; bottom:30px; display:flex; flex-direction:column; justify-content:space-between; font-size:0.6rem; color:var(--text-muted);">
-          <span>1.5k</span><span>1.2k</span><span>900</span><span>600</span><span>300</span><span>0</span>
+// ======================= CAMERA WALL =======================
+function buildCamWall(cid,cams){
+  const c=document.getElementById(cid);if(!c)return;c.innerHTML='';
+  cams.forEach(camId=>{
+    const cam=CAMERAS.find(x=>x.id===camId);if(!cam)return;
+    const d=document.createElement('div');
+    d.className='cam-wrap'+(cam.alert?' alert-cam':'');
+    d.innerHTML=`
+      <div class="cam-top">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="width:6px;height:6px;border-radius:50%;background:${cam.alert?'var(--red)':'var(--green)'};${cam.alert?'animation:blink 1.5s infinite':''}"></span>
+          <span class="cam-id">${cam.id}</span><span style="color:#475569">|</span><span class="cam-name">${cam.name}</span>
         </div>
-        <!-- X Axis Labels -->
-        <div style="position:absolute; left:30px; right:10px; bottom:0; display:flex; justify-content:space-between; font-size:0.6rem; color:var(--text-muted);">
-          <span>08:00</span><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span>
-        </div>
-      `;
-      container.innerHTML = svg;
-    }
+        <span class="cam-fps">${cam.fps} FPS</span>
+      </div>
+      <div class="cam-body">
+        <canvas></canvas>
+        <div class="cam-scanline"></div>
+        <div class="cam-ts">REC &#8226; 13:42:21</div>
+        <div class="cam-ai ${cam.alert?'warn':'ok'}">${cam.alert?'&#9888; WATCHLIST DETECTED':'AI DETECTION ACTIVE'}</div>
+        <div class="cam-count"><b style="color:var(--accent)">${cam.vcount}</b> VEHICLES</div>
+      </div>
+      <div class="cam-bottom"><span>${cam.road}</span><span style="color:var(--cyan);font-weight:700">1080P &#8226; 60Hz</span></div>`;
+    d.onclick=()=>openCamModal(cam.id);
+    c.appendChild(d);
+    const sc=new RoadScene(d.querySelector('canvas'),cam.id);
+    allScenes.push(sc);
+  });
+}
 
-    // --- INITIALIZATION ---
-    window.onload = () => {
-      initCanvases();
-      
-      generateSVGMap('cmd-map-container', 600, 500);
-      generateSVGMap('journey-map-container', 600, 500);
-      generateSVGMap('full-map-container', 800, 600);
-      generateSVGMap('demo-map-container', 600, 500);
-      
-      renderLiveEvents();
-      renderAnalyticsChart();
-      
-      // Trigger initial resize to fix canvas size issues on fast load
-      window.dispatchEvent(new Event('resize'));
-    };
+// ======================= CAMERA MODAL =======================
+let modalScene=null,modalAnimId=null;
 
-  </script>
+function openCamModal(camId){
+  const cam=CAMERAS.find(x=>x.id===camId);if(!cam)return;
+  document.getElementById('cm-title').textContent=cam.id;
+  document.getElementById('cm-sub').textContent=cam.name+' -- '+cam.loc;
+  document.getElementById('cm-dot').style.background=cam.alert?'var(--red)':'var(--green)';
+  document.getElementById('modal-ai-lbl').textContent=cam.alert?'&#9888; WATCHLIST VEHICLE DETECTED':'AI DETECTION ACTIVE';
+  document.getElementById('modal-ai-lbl').style.color=cam.alert?'var(--red)':'var(--green)';
+  document.getElementById('cm-specs').innerHTML=`
+    <div class="vp-metric"><label>Resolution</label><value>4K / 3840x2160</value></div>
+    <div class="vp-metric"><label>Framerate</label><value>${cam.fps} FPS</value></div>
+    <div class="vp-metric"><label>Encoding</label><value>H.265 HEVC</value></div>
+    <div class="vp-metric"><label>Edge Pipeline</label><value>Jetson Orin Nano</value></div>
+    <div class="vp-metric"><label>AI Models</label><value>YOLOv11x+OSNet</value></div>
+    <div class="vp-metric"><label>Vehicles Now</label><value style="color:var(--accent)">${cam.vcount}</value></div>`;
+  document.getElementById('cm-det-body').innerHTML=cam.dets.map(d=>`
+    <tr>
+      <td style="color:${d.watchlist?'var(--red)':d.hero?'var(--accent)':'var(--muted2)'};font-weight:700">${d.id}</td>
+      <td>${d.type}</td><td style="color:var(--green)">${Math.round(d.conf*100)}%</td>
+      <td><span class="plate-badge">${d.plate}</span></td><td>${d.speed} km/h</td>
+    </tr>`).join('');
+  document.getElementById('cm-ai-bars').innerHTML=`
+    <div class="ai-row"><div class="ai-row-top"><span>YOLOv11x Detection</span><span>98.2%</span></div><div class="ai-bar"><div class="ai-fill" style="width:98.2%;background:var(--accent)"></div></div></div>
+    <div class="ai-row"><div class="ai-row-top"><span>ByteTrack MOT</span><span>96.8%</span></div><div class="ai-bar"><div class="ai-fill" style="width:96.8%;background:var(--cyan)"></div></div></div>
+    <div class="ai-row"><div class="ai-row-top"><span>PaddleOCR ANPR</span><span>94.1%</span></div><div class="ai-bar"><div class="ai-fill" style="width:94.1%;background:var(--amber)"></div></div></div>
+    <div class="ai-row" style="margin-bottom:0"><div class="ai-row-top"><span>OSNet-AIN RE-ID</span><span>92.7%</span></div><div class="ai-bar"><div class="ai-fill" style="width:92.7%;background:var(--purple)"></div></div></div>`;
+  document.getElementById('cam-modal').classList.add('open');
+  cancelAnimationFrame(modalAnimId);
+  if(modalScene){modalScene.active=false;modalScene=null;}
+  requestAnimationFrame(()=>{
+    const cv=document.getElementById('modal-canvas');
+    modalScene=new RoadScene(cv,camId);
+    function loop(){if(!modalScene||!modalScene.active)return;modalScene.draw();modalAnimId=requestAnimationFrame(loop);}
+    loop();
+  });
+}
+function closeModal(){
+  document.getElementById('cam-modal').classList.remove('open');
+  if(modalScene){modalScene.active=false;modalScene=null;}
+  cancelAnimationFrame(modalAnimId);
+}
+function toggleNVModal(){
+  nightVision=!nightVision;
+  const btn=document.getElementById('modal-nv-btn');
+  btn.textContent=nightVision?'&#9728; NIGHT VISION ON':'&#127769; NIGHT VISION';
+  btn.style.borderColor=nightVision?'var(--green)':'';btn.style.color=nightVision?'var(--green)':'';
+}
+document.getElementById('cam-modal').onclick=e=>{if(e.target===e.currentTarget)closeModal();};
+
+// ======================= EVENTS =======================
+function renderEvents(){
+  const el=document.getElementById('event-list');if(!el)return;
+  el.innerHTML=EVENTS.map(e=>`<div class="ev" style="border-left-color:${e.color}">
+    <span class="ev-time">${e.t}</span>
+    <span class="ev-badge" style="background:${e.color}22;color:${e.color};border:1px solid ${e.color}55">${e.badge}</span>
+    <span class="ev-msg">${e.msg}</span></div>`).join('');
+}
+function addEv(badge,msg,color){
+  const t=new Date().toLocaleTimeString('en-IN',{hour12:false,timeZone:'Asia/Kolkata'});
+  EVENTS.unshift({t,badge,msg,color});if(EVENTS.length>20)EVENTS.pop();renderEvents();
+}
+function addPingEvent(){addEv('PING','Manual intelligence ping broadcast to all edge nodes','#64748b');}
+
+// ======================= VEHICLES =======================
+let vehFilter='ALL',selVeh=VEHICLES[0];
+function renderVehicleTable(){
+  const term=(document.getElementById('veh-search')||{}).value||'';
+  const rows=VEHICLES.filter(v=>{
+    const ok=v.id.toLowerCase().includes(term.toLowerCase())||v.plate.toLowerCase().includes(term.toLowerCase())||v.type.toLowerCase().includes(term.toLowerCase());
+    if(vehFilter==='WATCHLIST')return ok&&v.status==='WATCHLIST';
+    if(vehFilter==='NORMAL')return ok&&v.status==='NORMAL';
+    return ok;
+  });
+  document.getElementById('veh-tbody').innerHTML=rows.map(v=>`
+    <tr class="${v.id===selVeh.id?'sel':''}" onclick="selectVeh('${v.id}')">
+      <td style="color:var(--accent);font-weight:700">${v.id}</td>
+      <td><span class="plate-badge">${v.plate}</span></td>
+      <td style="color:var(--muted2)">${v.type} &#8226; ${v.color}</td>
+      <td style="color:var(--cyan);font-weight:700">${v.cam}</td>
+      <td>${v.cams} Cams</td>
+      <td style="font-weight:700">${v.speed} km/h</td>
+      <td><span class="status-badge ${v.status.toLowerCase()}">${v.status}</span></td>
+      <td><button class="btn" onclick="event.stopPropagation();navTo('journey');quickJourney('${v.id}','${v.plate}')" style="padding:3px 7px;font-size:9px">JOURNEY</button></td>
+    </tr>`).join('');
+  renderVehicleProfile();
+}
+function selectVeh(id){selVeh=VEHICLES.find(v=>v.id===id)||selVeh;renderVehicleTable();}
+function filterVehicles(){renderVehicleTable();}
+function setVehFilter(f,btn){
+  vehFilter=f;
+  document.querySelectorAll('#veh-status-filter .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderVehicleTable();
+}
+function renderVehicleProfile(){
+  const v=selVeh;
+  const bd=document.getElementById('vp-badge');if(bd)bd.textContent=v.id;
+  const body=document.getElementById('vp-body');if(!body)return;
+  body.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:10px">
+      <div><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:3px">${v.id} -- ${v.type}</div>
+      <div style="font-size:16px;font-weight:900;color:var(--accent)">${v.plate}</div></div>
+      <span class="status-badge ${v.status.toLowerCase()}">${v.status}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div class="vp-metric"><label>Color</label><value>${v.color}</value></div>
+      <div class="vp-metric"><label>Current Node</label><value style="color:var(--cyan)">${v.cam}</value></div>
+      <div class="vp-metric"><label>First Seen</label><value>${v.first}</value></div>
+      <div class="vp-metric"><label>Last Seen</label><value>${v.last}</value></div>
+      <div class="vp-metric"><label>Total Distance</label><value style="color:var(--accent)">${v.dist} KM</value></div>
+      <div class="vp-metric"><label>Avg Speed</label><value>${v.speed} KM/H</value></div>
+    </div>
+    <div class="vp-metric">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><label style="display:inline">RE-ID Confidence</label><span style="color:var(--green);font-size:12px;font-weight:800">${v.reid}%</span></div>
+      <div class="reid-bar"><div class="reid-fill" style="width:${v.reid}%"></div></div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px">OSNet-AIN 512-dim cosine similarity</div>
+    </div>
+    <button class="btn btn-accent" onclick="navTo('journey');quickJourney('${v.id}','${v.plate}')" style="width:100%;justify-content:center">
+      &#9889; Launch Full Journey Reconstruction
+    </button>`;
+}
+
+// ======================= JOURNEY =======================
+let curJVeh=VEHICLES[0];
+function searchJourney(){
+  const q=(document.getElementById('journey-search')||{}).value||'';
+  const v=VEHICLES.find(x=>x.plate.toUpperCase().includes(q.toUpperCase())||x.id.toUpperCase().includes(q.toUpperCase()));
+  if(v)loadJourney(v);
+}
+function quickJourney(id,plate){
+  const inp=document.getElementById('journey-search');if(inp)inp.value=plate;
+  const v=VEHICLES.find(x=>x.id===id);if(v)loadJourney(v);
+}
+const J_DIST={'V-1027':'3.8','V-2041':'2.1','V-3109':'2.9'};
+const J_DUR={'V-1027':'04:37','V-2041':'07:02','V-3109':'06:56'};
+function loadJourney(v){
+  curJVeh=v;
+  const di=document.getElementById('jkpi-dist'),du=document.getElementById('jkpi-dur'),sp=document.getElementById('jkpi-spd'),co=document.getElementById('jkpi-conf');
+  if(di)di.innerHTML=(J_DIST[v.id]||v.dist)+' <span style="font-size:12px;font-weight:400;color:var(--muted)">KM</span>';
+  if(du)du.innerHTML=(J_DUR[v.id]||'N/A')+' <span style="font-size:12px;font-weight:400;color:var(--muted)">MIN</span>';
+  if(sp)sp.innerHTML=v.speed+' <span style="font-size:12px;font-weight:400;color:var(--muted)">KM/H</span>';
+  if(co)co.textContent=v.reid+'%';
+  const lb=document.getElementById('j-vehicle-label');if(lb)lb.textContent=v.id+' -- '+v.type+' '+v.color;
+  const tl=document.getElementById('journey-timeline');if(!tl)return;
+  if(!v.journey||v.journey.length===0){tl.innerHTML='<div style="color:var(--muted);font-size:11px;padding:16px 0">No journey nodes recorded for this vehicle.</div>';return;}
+  tl.innerHTML=v.journey.map((s,i)=>{
+    const mb=s.mb?`<div class="match-grid">${Object.entries(s.mb).map(([k,val])=>`<div class="match-item"><span>${k}</span><b>${val}%</b></div>`).join('')}</div>`:'';
+    return `<div class="tnode"><div class="tnode-dot">${i+1}</div><div class="tnode-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+        <div><span class="tnode-cam">${s.cam}</span><span style="color:#475569;margin:0 6px">|</span><span class="tnode-loc">${s.name}</span></div>
+        <span style="color:var(--green);font-weight:700">${Math.round(s.conf*100)}% MATCH</span>
+      </div>
+      <div class="tnode-meta">
+        <span>TIME: <b>${s.ts}</b></span><span>SPEED: <b>${s.speed} km/h</b></span>
+        ${s.transit?`<span>TRANSIT: <b>${s.transit}s from prev</b></span>`:''}
+        <span>PLATE: <b>${s.plate}</b></span>
+      </div>${mb}</div></div>`;
+  }).join('');
+  buildSVGMap('journey-map-wrap',{showRoute:reconStage>=2,routeStage:reconStage>=2?2:0,markerPos:reconStage>=2?STMK[3]:null});
+}
+
+// ======================= CITY MAP =======================
+function buildCityMap(){buildSVGMap('city-map-svg-wrap',{interactive:true});}
+function showCamPopup(camId,x,y){
+  const cam=CAMERAS.find(c=>c.id===camId);if(!cam)return;
+  const popup=document.getElementById('cam-popup');
+  const wrap=document.getElementById('city-map-svg-wrap');
+  const wr=wrap.getBoundingClientRect();
+  popup.style.left=Math.min((x/580)*wr.width+16,wr.width-190)+'px';
+  popup.style.top=Math.max((y/480)*wr.height-90,10)+'px';
+  popup.style.display='block';
+  popup.innerHTML=`<div style="font-weight:800;color:${cam.alert?'var(--red)':'var(--accent)'};font-size:12px;margin-bottom:6px">${cam.id} -- ${cam.name}</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px">${cam.loc}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;margin-bottom:8px">
+      <span style="color:var(--muted2)">FPS:</span><span style="color:#fff;font-weight:700">${cam.fps}</span>
+      <span style="color:var(--muted2)">Vehicles:</span><span style="color:var(--accent);font-weight:700">${cam.vcount}</span>
+      <span style="color:var(--muted2)">Status:</span><span style="color:${cam.alert?'var(--red)':'var(--green)'};font-weight:700">${cam.alert?'&#9888; ALERT':'&#9679; ONLINE'}</span>
+    </div>
+    <button class="btn btn-accent" onclick="openCamModal('${cam.id}')" style="width:100%;justify-content:center;font-size:10px;padding:5px 8px">INSPECT FEED</button>`;
+  setTimeout(()=>document.addEventListener('click',hideCamPopup,{once:true}),100);
+}
+function hideCamPopup(){document.getElementById('cam-popup').style.display='none';}
+
+// ======================= ALERTS =======================
+let alertFilter='ALL';
+const SEV_COLOR={CRITICAL:'var(--red)',HIGH:'var(--accent)',MEDIUM:'var(--amber)',INFO:'var(--cyan)'};
+function renderAlerts(){
+  const c=document.getElementById('alerts-container');if(!c)return;
+  const list=alertFilter==='ALL'?ALERTS_DATA:ALERTS_DATA.filter(a=>a.sev===alertFilter);
+  c.innerHTML=list.map(a=>`<div class="alert-card ${a.sev.toLowerCase()}" style="margin:0 0 8px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">
+      <div><div style="font-size:12px;font-weight:800;text-transform:uppercase;color:${SEV_COLOR[a.sev]}">${a.id} -- ${a.type}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">NODE: <strong style="color:${SEV_COLOR[a.sev]}">${a.cam}</strong> | TIME: ${a.ts} IST | AI CONF: <strong style="color:var(--green)">${Math.round(a.conf*100)}%</strong></div></div>
+      <span style="font-size:9px;padding:3px 9px;border-radius:3px;font-weight:700;background:${SEV_COLOR[a.sev]}22;color:${SEV_COLOR[a.sev]};border:1px solid ${SEV_COLOR[a.sev]}55;white-space:nowrap">${a.sev}</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted2);line-height:1.5;background:rgba(0,0,0,.3);padding:8px 10px;border-radius:4px;margin-bottom:8px">${a.msg}</div>
+    <div style="font-size:10px;color:var(--amber);font-weight:700;margin-bottom:8px">&#9888; RECOMMENDED: ${a.action}</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn" onclick="navTo('journey');runReconstruct()" style="font-size:10px;padding:4px 10px">&#8599; TRACK JOURNEY</button>
+      <button class="btn" onclick="navTo('live')" style="font-size:10px;padding:4px 10px">&#128247; VIEW CAMERA</button>
+    </div>
+  </div>`).join('');
+}
+function filterAlerts(f,btn){alertFilter=f;document.querySelectorAll('#sev-filter .sev-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderAlerts();}
+
+// ======================= ANALYTICS =======================
+const TIME_DATA={'1H':{tp:'420',spd:'41.2',ci:'48%',j:'312'},'TODAY':{tp:'1,420',spd:'38.4',ci:'72%',j:'6,421'},'WEEK':{tp:'9,840',spd:'36.8',ci:'79%',j:'41,203'}};
+const HOURLY=[640,1180,1420,980,890,847,920];
+const LABELS=['08:00','09:00','10:00','11:00','12:00','13:00','14:00'];
+const PIE_DATA=[{label:'Sedans',val:48,color:'#f97316'},{label:'SUVs',val:24,color:'#06b6d4'},{label:'Trucks',val:14,color:'#8b5cf6'},{label:'Buses',val:8,color:'#10b981'},{label:'2-Wheel',val:6,color:'#f59e0b'}];
+const CORRS=[{name:'NH-44 North',avg:48,limit:60},{name:'GT Expressway',avg:36,limit:50},{name:'West Industrial',avg:52,limit:60},{name:'Metro Terminal',avg:24,limit:40},{name:'Ring Road East',avg:38,limit:50}];
+
+function setTimeRange(r,btn){
+  document.querySelectorAll('#time-filter .sev-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  const d=TIME_DATA[r];
+  ['a-tp','a-spd','a-ci','a-journeys'].forEach((id,i)=>{
+    const el=document.getElementById(id);if(!el)return;
+    const vals=[d.tp+' <span style="font-size:11px;font-weight:400;color:var(--muted)">veh/hr</span>',d.spd+' <span style="font-size:11px;font-weight:400;color:var(--muted)">km/h</span>',d.ci,d.j];
+    el.innerHTML=vals[i];
+  });
+}
+
+function drawVolumeChart(){
+  const cv=document.getElementById('vol-chart');if(!cv)return;
+  const wrap=cv.parentElement;cv.width=wrap.clientWidth||400;cv.height=wrap.clientHeight||200;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,PL=40,PR=12,PT=10,PB=28;
+  const cw=W-PL-PR,ch=H-PT-PB,MAX=1500,n=HOURLY.length;
+  const pts=HOURLY.map((v,i)=>({x:PL+i*(cw/(n-1)),y:PT+ch*(1-v/MAX)}));
+  ctx.strokeStyle='rgba(30,44,69,.8)';ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(f=>{const y=PT+ch*f;ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(PL+cw,y);ctx.stroke();ctx.fillStyle='#64748b';ctx.font='10px monospace';ctx.textAlign='right';ctx.fillText(Math.round(MAX*(1-f)),PL-5,y+4);});
+  const grad=ctx.createLinearGradient(0,PT,0,PT+ch);grad.addColorStop(0,'rgba(249,115,22,.35)');grad.addColorStop(1,'rgba(249,115,22,.02)');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(pts[0].x,PT+ch);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,PT+ch);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#f97316';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();
+  pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='var(--bg)';ctx.fill();ctx.strokeStyle='#f97316';ctx.lineWidth=2;ctx.stroke();});
+  ctx.fillStyle='#64748b';ctx.font='10px monospace';ctx.textAlign='center';LABELS.forEach((l,i)=>ctx.fillText(l,pts[i].x,H-5));
+}
+
+function drawPieChart(){
+  const cv=document.getElementById('pie-chart');if(!cv)return;
+  const ctx=cv.getContext('2d');const cx=60,cy=60,r=52,ir=28;let ang=-Math.PI/2;
+  const total=PIE_DATA.reduce((s,d)=>s+d.val,0);
+  PIE_DATA.forEach(d=>{
+    const sl=(d.val/total)*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+sl);ctx.closePath();ctx.fillStyle=d.color;ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,ir,0,Math.PI*2);ctx.fillStyle='#080c14';ctx.fill();
+    ang+=sl;
+  });
+  document.getElementById('pie-legend').innerHTML=PIE_DATA.map(d=>`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${d.color};flex-shrink:0"></span><span style="color:var(--muted2)">${d.label}</span><span style="color:#fff;font-weight:700;margin-left:auto">${d.val}%</span></div>`).join('');
+}
+
+function drawCorridorChart(){
+  const el=document.getElementById('corridor-chart');if(!el)return;
+  el.innerHTML=CORRS.map(c=>{
+    const pct=Math.round((c.avg/c.limit)*100),color=pct>=90?'var(--red)':pct>=70?'var(--amber)':'var(--green)';
+    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;color:var(--muted2)"><span>${c.name}</span><span style="color:#fff;font-weight:700">${c.avg}/${c.limit} km/h</span></div><div class="ai-bar"><div class="ai-fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+  }).join('');
+}
+
+// ======================= NAV =======================
+function navTo(pid){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===pid));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('page-'+pid);if(pg)pg.classList.add('active');
+  requestAnimationFrame(()=>{
+    allScenes.forEach(s=>{if(s&&s.canvas)s.resize();});
+    if(pid==='journey')loadJourney(curJVeh);
+    if(pid==='citymap')buildCityMap();
+    if(pid==='analytics'){drawVolumeChart();drawPieChart();drawCorridorChart();}
+  });
+}
+document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.page)));
+
+// ======================= UTILS =======================
+function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen();}
+function toggleNV(){nightVision=!nightVision;const btn=document.getElementById('nv-btn');if(btn){btn.textContent=nightVision?'&#9728; NIGHT VISION ON':'&#127769; NIGHT VISION';btn.style.borderColor=nightVision?'var(--green)':'';btn.style.color=nightVision?'var(--green)':'';}}
+
+// Clock
+function updateClock(){const t=new Date().toLocaleTimeString('en-IN',{hour12:false,timeZone:'Asia/Kolkata'});const cl=document.getElementById('clock');if(cl)cl.textContent=t;const mt=document.getElementById('modal-ts');if(mt)mt.textContent=t;}
+updateClock();setInterval(updateClock,1000);
+
+// Uptime
+let upSec=15697;setInterval(()=>{upSec++;const h=Math.floor(upSec/3600),m=Math.floor((upSec%3600)/60),s=upSec%60;const el=document.getElementById('uptime-el');if(el)el.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');},1000);
+
+// Render loop
+function renderLoop(){allScenes.forEach(s=>{if(s&&s.canvas&&s.canvas.width>10)s.draw();});requestAnimationFrame(renderLoop);}
+
+// Init
+window.addEventListener('load',()=>{
+  buildCamWall('cmd-cam-grid',['CAM-01','CAM-02','CAM-03','CAM-04']);
+  buildCamWall('live-cam-grid',['CAM-01','CAM-02','CAM-03','CAM-04']);
+  buildSVGMap('cmd-map-wrap',{});
+  buildSVGMap('journey-map-wrap',{});
+  renderEvents();renderVehicleTable();loadJourney(VEHICLES[0]);renderAlerts();
+  renderLoop();
+});
+window.addEventListener('resize',()=>{allScenes.forEach(s=>{if(s&&s.canvas)s.resize();});if(document.getElementById('page-analytics').classList.contains('active'))drawVolumeChart();});
+</script>
 </body>
 </html>
